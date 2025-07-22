@@ -1,0 +1,28 @@
+# PRISM Analytics - ISRC Metadata Analyzer Dependencies
+# Web Framework
+Flask==2.3.3
+Flask-CORS==4.0.0
+
+# Database
+SQLAlchemy==2.0.21
+
+# HTTP Requests
+requests==2.31.0
+
+# Data Processing
+pandas==2.1.1
+numpy==1.25.2
+
+# Export Formats
+xlsxwriter==3.1.2
+openpyxl==3.1.2
+
+# Music Metadata
+musicbrainzngs==0.7.1
+spotipy==2.23.0
+
+# Environment Management
+python-dotenv==1.0.0
+
+# Development
+pytest==7.4.2

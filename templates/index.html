@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PRISM Analytics - ISRC Metadata Analyzer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/prism-theme.css') }}">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+                <div style="display: flex; align-items: center;">
+                    <div>
+                        <h1 style="margin: 0; font-size: 1.5rem; letter-spacing: 4px;">P R I S M</h1>
+                        <p style="margin: 0; color: var(--medium-gray); font-size: 0.9rem;">
+                            Analytics Engine
+                        </p>
+                    </div>
+                </div>
+                <div class="tagline">
+                    Transforming Music Data into Actionable Insights
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="container">
+            <div id="loading" style="display: none; text-align: center; margin: 1rem 0;">
+                <!-- Loading indicator -->
+            </div>
+            
+            <div id="error" style="display: none; color: var(--precise-red); margin: 1rem 0;">
+                <!-- Error messages -->
+            </div>
+            
+            <div class="hero-section" style="text-align: center; margin-bottom: 3rem;">
+                <h2>ISRC Metadata Intelligence</h2>
+                <p class="tagline">
+                    Comprehensive track and artist metadata analysis from authoritative music industry sources
+                </p>
+            </div>
+
+            <div style="max-width: 600px; margin: 0 auto;">
+                <div class="card">
+                    <h3>Analyze ISRC</h3>
+                    <form id="isrc-analysis-form">
+                        <div class="form-group">
+                            <label for="isrc" class="form-label">International Standard Recording Code (ISRC)</label>
+                            <input type="text" 
+                                   id="isrc" 
+                                   name="isrc" 
+                                   class="form-input" 
+                                   placeholder="e.g., USRC17607839"
+                                   pattern="[A-Z]{2}[A-Z0-9]{3}[0-9]{7}"
+                                   required>
+                            <small style="color: var(--medium-gray);">
+                                Format: 2-letter country code + 3-character registrant + 7-digit designation
+                            </small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label style="display: flex; align-items: center;">
+                                <input type="checkbox" name="comprehensive" checked style="margin-right: 0.5rem;">
+                                <span>Comprehensive analysis (includes lyrics, credits, technical data)</span>
+                            </label>
+                        </div>
+                        
+                        <button type="submit" class="btn-primary" style="width: 100%;">
+                            Analyze Metadata
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div id="results" style="margin-top: 2rem;">
+                <!-- Results will be displayed here -->
+            </div>
+
+            <div style="margin-top: 3rem;">
+                <h3>Data Sources</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                    <div class="card">
+                        <h4>MusicBrainz</h4>
+                        <p>Authoritative metadata, credits, relationships</p>
+                    </div>
+                    <div class="card">
+                        <h4>Spotify</h4>
+                        <p>Audio features, popularity metrics, streaming data</p>
+                    </div>
+                    <div class="card">
+                        <h4>YouTube</h4>
+                        <p>Video analytics, channel information</p>
+                    </div>
+                    <div class="card">
+                        <h4>Genius</h4>
+                        <p>Lyrics, songwriter credits</p>
+                    </div>
+                    <div class="card">
+                        <h4>Discogs</h4>
+                        <p>Release information, detailed credits</p>
+                    </div>
+                    <div class="card">
+                        <h4>Last.fm</h4>
+                        <p>Social tags, listening statistics</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer style="background-color: var(--light-gray); padding: 1rem 0; margin-top: 3rem;">
+        <div class="container">
+            <p style="text-align: center; color: var(--medium-gray); margin: 0;">
+                © 2025 Precise Digital. All rights reserved. | 
+                <a href="https://precise.digital" style="color: var(--precise-red);">precise.digital</a>
+            </p>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
