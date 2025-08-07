@@ -36,6 +36,28 @@ class RateLimiter:
                     
             self.request_times.append(now)
 
+# src/services/api_clients.py - Add YouTube client
+class YouTubeClient:
+    def __init__(self, api_key):
+        self.api_key = api_key
+        self.base_url = "https://www.googleapis.com/youtube/v3"
+        self.rate_limiter = RateLimiter(100)  # Adjust based on quota
+    
+    def search_by_isrc(self, isrc):
+        self.rate_limiter.wait_if_needed()
+        params = {
+            'part': 'snippet,contentDetails',
+            'q': f'"{isrc}"',  # Search for ISRC in description
+            'type': 'video',
+            'videoCategoryId': '10',  # Music category
+            'maxResults': 5,
+            'key': self.api_key
+        }
+        response = requests.get(f"{self.base_url}/search", params=params)
+        if response.status_code == 200:
+            return response.json()
+        return None
+
 class SpotifyClient:
     """Simple Spotify client"""
     
@@ -153,6 +175,31 @@ class MusicBrainzClient:
             'inc': 'artist-credits+releases'
         }
         return self._make_request('/recording/', params)
+
+# src/services/api_clients.py
+class GeniusClient:
+    def __init__(self, api_key):
+        self.api_key = api_key
+        self.base_url = "https://api.genius.com"
+        self.rate_limiter = RateLimiter(100)
+        
+    def search_song(self, title, artist):
+        self.rate_limiter.wait_if_needed()
+        headers = {'Authorization': f'Bearer {self.api_key}'}
+        params = {'q': f'{title} {artist}'}
+        
+        response = requests.get(
+            f"{self.base_url}/search",
+            headers=headers,
+            params=params
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            hits = data.get('response', {}).get('hits', [])
+            if hits:
+                return hits[0]['result']
+        return None
 
 class APIClientManager:
     """Simple API client manager"""

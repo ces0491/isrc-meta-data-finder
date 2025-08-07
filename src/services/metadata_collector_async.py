@@ -149,7 +149,27 @@ class AsyncMetadataCollector:
             raw_data['musicbrainz'] = None
             
         return raw_data
-        
+
+    async def _collect_credits_async(self, isrc, recording_id):
+    """Collect credits from MusicBrainz"""
+    # Get detailed recording info with credits
+    params = {
+        'inc': 'artist-credits+releases+work-rels',
+        'fmt': 'json'
+    }
+    result = await self._make_mb_request(f'/recording/{recording_id}', params)
+    
+    credits = []
+    if result and 'relations' in result:
+        for relation in result['relations']:
+            if relation.get('artist'):
+                credits.append({
+                    'person_name': relation['artist']['name'],
+                    'credit_type': relation['type'],
+                    'role_details': relation.get('attributes', {})
+                })
+    return credits
+
     async def _collect_spotify_async(self, isrc):
         """Collect from Spotify"""
         loop = asyncio.get_event_loop()
