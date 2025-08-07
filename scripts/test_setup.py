@@ -3,6 +3,11 @@
 
 import sys
 import os
+from pathlib import Path
+
+# Add parent directory to path so we can import from src/ and config/
+parent_dir = Path(__file__).parent.parent
+sys.path.insert(0, str(parent_dir))
 
 print("🔍 PRISM Analytics - Setup Diagnostic")
 print("=" * 50)
@@ -76,6 +81,13 @@ except ImportError:
     print("✗ python-dotenv not installed")
     missing_packages.append("python-dotenv")
 
+try:
+    import multipart
+    print("✓ python-multipart installed")
+except ImportError:
+    print("✗ python-multipart not installed")
+    missing_packages.append("python-multipart")
+
 if missing_packages:
     print(f"\n⚠️  Install missing packages with:")
     print(f"   pip install {' '.join(missing_packages)}")
@@ -94,7 +106,13 @@ if os.path.exists('.env'):
     spotify_configured = bool(spotify_id and spotify_secret)
     
     if spotify_configured:
-        print(f"  Spotify: ✓ Configured (ID: {spotify_id[:10]}...)")
+        # Fixed: Check if spotify_id exists before trying to slice it
+        if spotify_id and len(spotify_id) > 10:
+            print(f"  Spotify: ✓ Configured (ID: {spotify_id[:10]}...)")
+        elif spotify_id:
+            print(f"  Spotify: ✓ Configured (ID: {spotify_id})")
+        else:
+            print(f"  Spotify: ✓ Configured")
     else:
         print(f"  Spotify: ✗ Not configured")
     
@@ -102,13 +120,23 @@ if os.path.exists('.env'):
     youtube_configured = bool(youtube_key)
     
     if youtube_configured:
-        print(f"  YouTube: ✓ Configured (Key: {youtube_key[:10]}...)")
+        # Fixed: Check if youtube_key exists before trying to slice it
+        if youtube_key and len(youtube_key) > 10:
+            print(f"  YouTube: ✓ Configured (Key: {youtube_key[:10]}...)")
+        elif youtube_key:
+            print(f"  YouTube: ✓ Configured (Key: {youtube_key})")
+        else:
+            print(f"  YouTube: ✓ Configured")
     else:
         print(f"  YouTube: ✗ Not configured")
     
     genius_key = os.getenv('GENIUS_API_KEY')
     if genius_key:
-        print(f"  Genius: ✓ Configured (Key: {genius_key[:10]}...)")
+        # Fixed: Check if genius_key exists and has length before slicing
+        if len(genius_key) > 10:
+            print(f"  Genius: ✓ Configured (Key: {genius_key[:10]}...)")
+        else:
+            print(f"  Genius: ✓ Configured (Key: {genius_key})")
     else:
         print(f"  Genius: ✗ Not configured")
 else:

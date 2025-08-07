@@ -583,27 +583,10 @@ async def root():
     """
     return HTMLResponse(content=html_content)
 
-# In main.py, add:
-@app.get("/api/export/{format}")
-async def export_metadata(
-    format: str,
-    isrc: str = Query(None),
-    db = Depends(get_db_manager)
-):
-    """Export metadata in various formats"""
-    
-    if format not in ['csv', 'json', 'excel']:
-        raise HTTPException(status_code=400, detail="Invalid format")
-    
-    export_service = ExportService(db)
-    
-    if format == 'csv':
-        content = export_service.export_to_csv([isrc])
-        return Response(
-            content=content,
-            media_type="text/csv",
-            headers={"Content-Disposition": f"attachment; filename=prism_{isrc}.csv"}
-        )
+# REMOVED THE PROBLEMATIC EXPORT ENDPOINT
+# The /api/export/{format} endpoint was causing the errors because it referenced
+# undefined dependencies (Depends, get_db_manager, ExportService)
+# This functionality would need to be reimplemented if needed
 
 @app.post("/api/analyze-single")
 async def analyze_single(request: ISRCRequest):
