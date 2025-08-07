@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Quick diagnostic to check if everything is set up correctly"""
 
-import sys
 import os
+import sys
 from pathlib import Path
 
 # Add parent directory to path so we can import from src/ and config/
@@ -20,6 +20,7 @@ missing_packages = []
 
 try:
     import fastapi
+
     print("✓ FastAPI installed")
 except ImportError:
     print("✗ FastAPI not installed")
@@ -27,6 +28,7 @@ except ImportError:
 
 try:
     import uvicorn
+
     print("✓ Uvicorn installed")
 except ImportError:
     print("✗ Uvicorn not installed")
@@ -34,6 +36,7 @@ except ImportError:
 
 try:
     import aiohttp
+
     print("✓ aiohttp installed")
 except ImportError:
     print("✗ aiohttp not installed")
@@ -41,6 +44,7 @@ except ImportError:
 
 try:
     import sqlalchemy
+
     print("✓ SQLAlchemy installed")
 except ImportError:
     print("✗ SQLAlchemy not installed")
@@ -48,6 +52,7 @@ except ImportError:
 
 try:
     import requests
+
     print("✓ requests installed")
 except ImportError:
     print("✗ requests not installed")
@@ -55,6 +60,7 @@ except ImportError:
 
 try:
     import spotipy
+
     print("✓ spotipy installed")
 except ImportError:
     print("✗ spotipy not installed")
@@ -62,6 +68,7 @@ except ImportError:
 
 try:
     import musicbrainzngs
+
     print("✓ musicbrainzngs installed")
 except ImportError:
     print("✗ musicbrainzngs not installed")
@@ -69,6 +76,7 @@ except ImportError:
 
 try:
     import pandas
+
     print("✓ pandas installed")
 except ImportError:
     print("✗ pandas not installed")
@@ -76,6 +84,7 @@ except ImportError:
 
 try:
     from dotenv import load_dotenv
+
     print("✓ python-dotenv installed")
 except ImportError:
     print("✗ python-dotenv not installed")
@@ -83,28 +92,30 @@ except ImportError:
 
 try:
     import multipart
+
     print("✓ python-multipart installed")
 except ImportError:
     print("✗ python-multipart not installed")
     missing_packages.append("python-multipart")
 
 if missing_packages:
-    print(f"\n⚠️  Install missing packages with:")
+    print("\n⚠️  Install missing packages with:")
     print(f"   pip install {' '.join(missing_packages)}")
 
 print("\n" + "-" * 50)
 
 # Check .env file
-if os.path.exists('.env'):
+if os.path.exists(".env"):
     print("✓ .env file exists")
     from dotenv import load_dotenv
+
     load_dotenv()
-    
+
     # Check API keys
-    spotify_id = os.getenv('SPOTIFY_CLIENT_ID')
-    spotify_secret = os.getenv('SPOTIFY_CLIENT_SECRET')
+    spotify_id = os.getenv("SPOTIFY_CLIENT_ID")
+    spotify_secret = os.getenv("SPOTIFY_CLIENT_SECRET")
     spotify_configured = bool(spotify_id and spotify_secret)
-    
+
     if spotify_configured:
         # Fixed: Check if spotify_id exists before trying to slice it
         if spotify_id and len(spotify_id) > 10:
@@ -112,13 +123,13 @@ if os.path.exists('.env'):
         elif spotify_id:
             print(f"  Spotify: ✓ Configured (ID: {spotify_id})")
         else:
-            print(f"  Spotify: ✓ Configured")
+            print("  Spotify: ✓ Configured")
     else:
-        print(f"  Spotify: ✗ Not configured")
-    
-    youtube_key = os.getenv('YOUTUBE_API_KEY')
+        print("  Spotify: ✗ Not configured")
+
+    youtube_key = os.getenv("YOUTUBE_API_KEY")
     youtube_configured = bool(youtube_key)
-    
+
     if youtube_configured:
         # Fixed: Check if youtube_key exists before trying to slice it
         if youtube_key and len(youtube_key) > 10:
@@ -126,11 +137,11 @@ if os.path.exists('.env'):
         elif youtube_key:
             print(f"  YouTube: ✓ Configured (Key: {youtube_key})")
         else:
-            print(f"  YouTube: ✓ Configured")
+            print("  YouTube: ✓ Configured")
     else:
-        print(f"  YouTube: ✗ Not configured")
-    
-    genius_key = os.getenv('GENIUS_API_KEY')
+        print("  YouTube: ✗ Not configured")
+
+    genius_key = os.getenv("GENIUS_API_KEY")
     if genius_key:
         # Fixed: Check if genius_key exists and has length before slicing
         if len(genius_key) > 10:
@@ -138,10 +149,10 @@ if os.path.exists('.env'):
         else:
             print(f"  Genius: ✓ Configured (Key: {genius_key})")
     else:
-        print(f"  Genius: ✗ Not configured")
+        print("  Genius: ✗ Not configured")
 else:
     print("✗ .env file missing")
-    if os.path.exists('.env.example'):
+    if os.path.exists(".env.example"):
         print("  ℹ️  Copy .env.example to .env:")
         print("     copy .env.example .env")
     else:
@@ -150,7 +161,7 @@ else:
 print("\n" + "-" * 50)
 
 # Check directories
-dirs_to_check = ['static', 'templates', 'src', 'config', 'data']
+dirs_to_check = ["static", "templates", "src", "config", "data"]
 for dir_name in dirs_to_check:
     if os.path.exists(dir_name):
         print(f"✓ {dir_name}/ directory exists")
@@ -162,10 +173,10 @@ print("\n" + "-" * 50)
 # Check database
 try:
     from src.models.database import DatabaseManager
-    
+
     # Create data directory if it doesn't exist
-    os.makedirs('data', exist_ok=True)
-    
+    os.makedirs("data", exist_ok=True)
+
     db = DatabaseManager()
     db.create_tables()
     print("✓ Database ready")
@@ -178,13 +189,13 @@ print("\n" + "-" * 50)
 # Check if we can import main modules
 try:
     from config.settings import Config
+
     config = Config()
     print("✓ Configuration module working")
 except Exception as e:
     print(f"✗ Configuration issue: {e}")
 
 try:
-    from src.services.api_clients import APIClientManager
     print("✓ API clients module working")
 except Exception as e:
     print(f"✗ API clients issue: {e}")

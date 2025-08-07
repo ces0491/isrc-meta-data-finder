@@ -1,0 +1,9 @@
+# pyproject.toml
+
+[tool.ruff]
+# Set the target Python version
+target-version = "py311"
+
+[tool.ruff.lint]
+# Enable the 'pyupgrade' rule set (UP)
+select = ["E", "F", "UP", "I"]

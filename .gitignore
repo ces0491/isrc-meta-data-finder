@@ -47,6 +47,7 @@ Thumbs.db
 
 # Project specific
 logs/*.log
+data/backups/*
 data/cache/*
 data/exports/*
 !data/cache/.gitkeep

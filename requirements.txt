@@ -1,6 +1,9 @@
 # PRISM Analytics - ISRC Metadata Analyzer Dependencies (FastAPI)
 # Compatible with Python 3.11+
 
+beautifulsoup4==4.12.2
+langdetect==1.0.9
+
 # Web Framework
 fastapi==0.104.1
 uvicorn[standard]==0.24.0
