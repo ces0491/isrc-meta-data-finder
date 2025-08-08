@@ -1,5 +1,3 @@
-# run.py
-
 #!/usr/bin/env python3
 """
 PRISM Analytics - Music Metadata Intelligence System
@@ -19,7 +17,7 @@ import base64
 from pathlib import Path
 from contextlib import contextmanager
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any, Optional, Dict, List
 
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent))
@@ -32,8 +30,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-# --- Simplified and Direct Imports ---
-# These imports are now direct. If a file is missing, Python will raise a standard ImportError.
+# Import your modules
 from config.settings import Config
 from src.services.api_clients import APIClientManager
 from src.services.metadata_collector_async import AsyncMetadataCollector
@@ -62,11 +59,9 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Load environment variables (handled by config.settings)
-
 # ============= DATABASE MANAGER =============
 class DatabaseManager:
-    """SQLite database manager for metadata storage - Complete Implementation"""
+    """SQLite database manager for metadata storage"""
     
     def __init__(self, db_path: str = "data/isrc_metadata.db"):
         self.db_path = Path(db_path)
@@ -169,21 +164,31 @@ class DatabaseManager:
     
     def get_session(self):
         """Get a database connection (compatibility method)"""
-        return self.get_connection().__enter__()
+        # Return the connection directly
+        return sqlite3.connect(str(self.db_path))
     
     def close_session(self, session):
         """Close a database connection (compatibility method)"""
         try:
-            session.close()
-        except:
-            pass
+            if session and hasattr(session, 'close'):
+                session.close()
+        except Exception as e:
+            logger.debug(f"Session close error (non-critical): {e}")
     
     def save_track_metadata(self, metadata: dict[str, Any]):
         """Save track metadata to database"""
         with self.get_connection() as conn:
             cursor = conn.cursor()
             
-            sources_json = json.dumps(metadata.get("sources", []))
+            # Ensure sources is properly formatted
+            sources = metadata.get("sources", [])
+            if isinstance(sources, list):
+                sources_json = json.dumps(sources)
+            else:
+                sources_json = str(sources)
+            
+            # Get current timestamp
+            now = datetime.now().isoformat()
             
             cursor.execute("""
                 INSERT OR REPLACE INTO tracks (
@@ -213,10 +218,10 @@ class DatabaseManager:
                 metadata.get("danceability"),
                 metadata.get("valence"),
                 metadata.get("popularity"),
-                metadata.get("confidence"),
-                metadata.get("data_completeness"),
+                metadata.get("confidence", metadata.get("confidence_score", 0)),
+                metadata.get("data_completeness", 0),
                 sources_json,
-                metadata.get("last_updated", datetime.now().isoformat())
+                metadata.get("last_updated", now)
             ))
             
             conn.commit()
@@ -282,9 +287,20 @@ class DatabaseManager:
             row = cursor.fetchone()
             
             if row:
+                # Convert Row to dict
                 track = dict(row)
+                
+                # Parse sources if it's a JSON string
                 if track.get("sources"):
-                    track["sources"] = json.loads(track["sources"])
+                    try:
+                        track["sources"] = json.loads(track["sources"])
+                    except:
+                        track["sources"] = []
+                
+                # Ensure last_updated is a string
+                if track.get("last_updated") and not isinstance(track["last_updated"], str):
+                    track["last_updated"] = str(track["last_updated"])
+                
                 return track
             return None
     
@@ -297,25 +313,31 @@ class DatabaseManager:
             
             # Total tracks analyzed
             cursor.execute("SELECT COUNT(*) as count FROM tracks")
-            stats["total_tracks"] = cursor.fetchone()["count"]
+            row = cursor.fetchone()
+            stats["total_tracks"] = row["count"] if row else 0
             
             # Average confidence score
-            cursor.execute("SELECT AVG(confidence_score) as avg FROM tracks")
-            stats["avg_confidence"] = cursor.fetchone()["avg"] or 0
+            cursor.execute("SELECT AVG(confidence_score) as avg FROM tracks WHERE confidence_score IS NOT NULL")
+            row = cursor.fetchone()
+            stats["avg_confidence"] = float(row["avg"]) if row and row["avg"] else 0
             
             # Tracks with lyrics
             cursor.execute("SELECT COUNT(*) as count FROM track_lyrics")
-            stats["tracks_with_lyrics"] = cursor.fetchone()["count"]
+            row = cursor.fetchone()
+            stats["tracks_with_lyrics"] = row["count"] if row else 0
             
             # Platform coverage
             cursor.execute("SELECT COUNT(*) as count FROM tracks WHERE spotify_id IS NOT NULL")
-            stats["spotify_coverage"] = cursor.fetchone()["count"]
+            row = cursor.fetchone()
+            stats["spotify_coverage"] = row["count"] if row else 0
             
             cursor.execute("SELECT COUNT(*) as count FROM tracks WHERE youtube_video_id IS NOT NULL")
-            stats["youtube_coverage"] = cursor.fetchone()["count"]
+            row = cursor.fetchone()
+            stats["youtube_coverage"] = row["count"] if row else 0
             
             cursor.execute("SELECT COUNT(*) as count FROM tracks WHERE musicbrainz_recording_id IS NOT NULL")
-            stats["musicbrainz_coverage"] = cursor.fetchone()["count"]
+            row = cursor.fetchone()
+            stats["musicbrainz_coverage"] = row["count"] if row else 0
             
             return stats
 
@@ -334,8 +356,8 @@ class DatabaseManager:
     def get_stats(self) -> dict[str, Any]:
         """Get database statistics - alias for get_analysis_stats"""
         return self.get_analysis_stats()
-    
-# For compatibility with run.py's model imports
+
+# For compatibility - empty class definitions
 class Track:
     pass
 
@@ -345,7 +367,7 @@ class TrackCredit:
 class TrackLyrics:
     pass
 
-# ============= METADATA CACHE WITH DB FALLBACK FROM main.py =============
+# ============= METADATA CACHE WITH DB FALLBACK =============
 class MetadataCache:
     """Enhanced cache with database fallback"""
     
@@ -370,7 +392,7 @@ class MetadataCache:
                 age_hours = (time.time() - cache_file.stat().st_mtime) / 3600
                 
                 if age_hours < self.ttl_hours:
-                    with open(cache_file) as f:
+                    with open(cache_file, 'r', encoding='utf-8') as f:
                         data = json.load(f)
                     logger.info(f"✅ Cache hit for {isrc} (age: {age_hours:.1f}h)")
                     return data
@@ -378,12 +400,15 @@ class MetadataCache:
                 logger.error(f"Cache read error: {e}")
         
         # Try database fallback
-        db_data = self.db.get_track_by_isrc(isrc)
-        if db_data:
-            logger.info(f"📊 Database hit for {isrc}")
-            # Update file cache from database
-            self.set(isrc, db_data)
-            return db_data
+        try:
+            db_data = self.db.get_track_by_isrc(isrc)
+            if db_data:
+                logger.info(f"📊 Database hit for {isrc}")
+                # Update file cache from database
+                self.set(isrc, db_data)
+                return db_data
+        except Exception as e:
+            logger.error(f"Database fallback error: {e}")
         
         return None
     
@@ -393,8 +418,8 @@ class MetadataCache:
         
         try:
             # Save to file cache
-            with open(cache_file, "w") as f:
-                json.dump(data, f, indent=2)
+            with open(cache_file, 'w', encoding='utf-8') as f:
+                json.dump(data, f, indent=2, default=str)
             logger.info(f"💾 Cached data for {isrc}")
             
             # Save to database
@@ -403,9 +428,9 @@ class MetadataCache:
         except Exception as e:
             logger.error(f"Cache write error: {e}")
 
-# ============= GENIUS API INTEGRATION FROM main.py =============
+# ============= GENIUS API INTEGRATION =============
 async def get_genius_lyrics(isrc: str, track_title: str | None = None, artist: str | None = None) -> dict[str, Any]:
-    """Get lyrics from Genius API - Complete Implementation"""
+    """Get lyrics from Genius API"""
     try:
         api_key = os.getenv("GENIUS_API_KEY")
         
@@ -525,7 +550,7 @@ class ExportRequest(BaseModel):
 
 # ============= ENHANCED CONFIDENCE SCORER =============
 class EnhancedConfidenceScorer:
-    """Advanced confidence scoring with multi-factor analysis - Best of Both Versions"""
+    """Advanced confidence scoring with multi-factor analysis"""
     
     @staticmethod
     def calculate_score(metadata: dict[str, Any], lyrics_data: dict[str, Any] | None = None) -> dict[str, Any]:
@@ -559,9 +584,9 @@ class EnhancedConfidenceScorer:
         # Data Sources Score
         if "Spotify" in sources:
             scores["data_sources"] += 35
-        if "MusicBrainz" in sources:
+        if "MusicBrainz" in sources or "Musicbrainz" in sources:
             scores["data_sources"] += 35
-        if "YouTube" in sources:
+        if "YouTube" in sources or "Youtube" in sources:
             scores["data_sources"] += 30
         
         # Essential Fields Score
@@ -644,9 +669,9 @@ class EnhancedConfidenceScorer:
             "weights_used": weights
         }
 
-# ============= ENHANCED EXPORT SERVICE WITH EXCEL FROM main.py =============
+# ============= EXPORT SERVICE =============
 class ExportService:
-    """Enhanced export service with comprehensive Excel support from main.py"""
+    """Export service with comprehensive Excel support"""
     
     @staticmethod
     def create_csv(metadata_list: list[dict[str, Any]]) -> str:
@@ -692,7 +717,7 @@ class ExportService:
                 "Danceability": item.get("danceability", ""),
                 "Valence": item.get("valence", ""),
                 "Popularity": item.get("popularity", ""),
-                "Confidence_Score": item.get("confidence_score", 0),
+                "Confidence_Score": item.get("confidence_score", item.get("confidence", 0)),
                 "Quality_Rating": item.get("quality_rating", ""),
                 "Sources": "|".join(item.get("sources", []))
             })
@@ -701,7 +726,7 @@ class ExportService:
     
     @staticmethod
     def create_excel(metadata_list: list[dict[str, Any]], db_stats: dict[str, Any] | None = None) -> io.BytesIO:
-        """Create comprehensive Excel export with PRISM branding - Enhanced from main.py"""
+        """Create comprehensive Excel export with PRISM branding"""
         if not EXCEL_AVAILABLE:
             raise ValueError("Excel export not available. Install xlsxwriter.")
         
@@ -834,7 +859,7 @@ class ExportService:
             else:
                 worksheet.write(row, 21, str(sources))
         
-        # Add comprehensive summary sheet
+        # Add summary sheet
         summary_sheet = workbook.add_worksheet('Summary')
         
         # Summary branding
@@ -854,18 +879,6 @@ class ExportService:
         musicbrainz_found = sum(1 for item in metadata_list if item.get("musicbrainz_id"))
         genius_found = sum(1 for item in metadata_list if "Genius" in item.get("sources", []))
         
-        # Quality distribution
-        quality_dist = {
-            "Excellent": 0, "Good": 0, "Fair": 0, "Poor": 0, "Insufficient": 0
-        }
-        
-        for item in metadata_list:
-            quality = item.get("quality_rating", "")
-            if not quality and item.get("confidence_details"):
-                quality = item["confidence_details"].get("quality_rating", "Unknown")
-            if quality in quality_dist:
-                quality_dist[quality] += 1
-        
         # Write summary statistics
         stats = [
             ('Export Statistics', ''),
@@ -877,13 +890,6 @@ class ExportService:
             ('YouTube Coverage', f'{youtube_found}/{total_tracks} ({youtube_found/total_tracks*100:.1f}%)' if total_tracks > 0 else '0/0 (0%)'),
             ('MusicBrainz Coverage', f'{musicbrainz_found}/{total_tracks} ({musicbrainz_found/total_tracks*100:.1f}%)' if total_tracks > 0 else '0/0 (0%)'),
             ('Genius Coverage', f'{genius_found}/{total_tracks} ({genius_found/total_tracks*100:.1f}%)' if total_tracks > 0 else '0/0 (0%)'),
-            ('', ''),
-            ('Quality Distribution', ''),
-            ('Excellent', f'{quality_dist["Excellent"]} ({quality_dist["Excellent"]/total_tracks*100:.1f}%)' if total_tracks > 0 else '0 (0%)'),
-            ('Good', f'{quality_dist["Good"]} ({quality_dist["Good"]/total_tracks*100:.1f}%)' if total_tracks > 0 else '0 (0%)'),
-            ('Fair', f'{quality_dist["Fair"]} ({quality_dist["Fair"]/total_tracks*100:.1f}%)' if total_tracks > 0 else '0 (0%)'),
-            ('Poor', f'{quality_dist["Poor"]} ({quality_dist["Poor"]/total_tracks*100:.1f}%)' if total_tracks > 0 else '0 (0%)'),
-            ('Insufficient', f'{quality_dist["Insufficient"]} ({quality_dist["Insufficient"]/total_tracks*100:.1f}%)' if total_tracks > 0 else '0 (0%)'),
         ]
         
         # Add database statistics if available
@@ -911,6 +917,8 @@ class ExportService:
 # Helper functions for validation
 def validate_isrc(isrc: str) -> bool:
     """Validate ISRC format"""
+    if not isrc:
+        return False
     pattern = r'^[A-Z]{2}[A-Z0-9]{3}[0-9]{7}$'
     return bool(re.match(pattern, isrc.upper().strip()))
 
@@ -918,7 +926,9 @@ def clean_isrc(isrc: str) -> str:
     """Clean ISRC format"""
     if not isrc:
         return ""
-    return re.sub(r'[-\s]', '', isrc.upper().strip())
+    # Remove any hyphens, spaces, and convert to uppercase
+    cleaned = re.sub(r'[-\s]', '', isrc.upper().strip())
+    return cleaned
 
 # ============= APPLICATION FACTORY =============
 def create_app() -> FastAPI:
@@ -945,15 +955,19 @@ def create_app() -> FastAPI:
     config = Config()
     api_config = config.get_api_config()
     
-    # Initialize managers
+    # Initialize database manager
     db_manager = DatabaseManager()
     
     # Initialize cache with database
     cache = MetadataCache(db_manager)
     
-    # Initialize core components directly
+    # Initialize API clients
     api_clients = APIClientManager(api_config)
+    
+    # Initialize metadata collector with the database manager
     metadata_collector = AsyncMetadataCollector(api_clients, db_manager)
+    
+    # Initialize other services
     confidence_scorer = EnhancedConfidenceScorer()
     export_service = ExportService()
     
@@ -966,12 +980,14 @@ def create_app() -> FastAPI:
     app.state.confidence_scorer = confidence_scorer
     app.state.export_service = export_service
     
+    logger.info("✅ Application initialized successfully")
+    
     return app
 
 # Create application instance
 app = create_app()
 
-# Mount static files
+# Mount static files if directory exists
 static_dir = Path("static")
 if static_dir.exists():
     app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -1219,22 +1235,6 @@ if __name__ == "__main__":
     print(f"  • Enhanced Confidence Scoring: ✅")
     print(f"  • Async Processing: ✅")
     print(f"  • Multi-Source Aggregation: ✅")
-    
-    # Additional production features
-    if IS_PRODUCTION:
-        print("\n🔒 Production Features:")
-        print(f"  • Auto-scaling: {'✅' if os.getenv('RENDER') else '❌'}")
-        print(f"  • SSL/HTTPS: ✅")
-        print(f"  • Persistent Storage: {'✅' if 'postgresql' in os.getenv('DATABASE_URL', '') else '❌'}")
-        print(f"  • Health Monitoring: ✅")
-        
-        # Check memory limits for free tier warning
-        if os.getenv("RENDER_PLAN", "free") == "free":
-            print("\n⚠️  Free Tier Limitations:")
-            print("  • 512MB RAM limit")
-            print("  • 750 hours/month")
-            print("  • Service spins down after 15 min inactivity")
-            print("  • Database expires after 90 days")
     
     # API Statistics
     try:
