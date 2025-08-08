@@ -47,6 +47,15 @@ except ImportError:
     EXCEL_AVAILABLE = False
     print("⚠️ xlsxwriter not installed. Excel export will be limited.")
 
+# Production configuration
+IS_PRODUCTION = os.getenv("RENDER") is not None or os.getenv("DATABASE_URL") is not None
+
+if IS_PRODUCTION:
+    # Update database URL for SQLAlchemy compatibility
+    db_url = os.getenv("DATABASE_URL")
+    if db_url and db_url.startswith("postgresql://"):
+        os.environ["DATABASE_URL"] = db_url.replace("postgresql://", "postgresql+psycopg2://", 1)
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -56,7 +65,7 @@ logger = logging.getLogger(__name__)
 
 # Load environment variables (handled by config.settings)
 
-# ============= COMPLETE DATABASE MANAGER FROM main.py =============
+# ============= DATABASE MANAGER =============
 class DatabaseManager:
     """SQLite database manager for metadata storage - Complete Implementation"""
     
@@ -311,6 +320,22 @@ class DatabaseManager:
             
             return stats
 
+    def test_connection(self) -> bool:
+        """Test database connection"""
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("SELECT 1")
+                cursor.fetchone()
+                return True
+        except Exception as e:
+            logger.error(f"Database connection test failed: {e}")
+            return False
+    
+    def get_stats(self) -> dict[str, Any]:
+        """Get database statistics - alias for get_analysis_stats"""
+        return self.get_analysis_stats()
+    
 # For compatibility with run.py's model imports
 class Track:
     pass
@@ -1137,36 +1162,123 @@ async def bulk_analyze(request: BulkAnalysisRequest):
 # ============= MAIN ENTRY POINT =============
 if __name__ == "__main__":
     print("=" * 60)
-    print("🎵 PRISM Analytics Engine - Reconciled Version 2.1")
-    print("Transforming Music Data into Actionable Intelligence")
+    print("🎵 ISRC Metadata Finder")
     print("=" * 60)
     
     config = Config()
     validation = config.validate_required_config()
     
-    print("\n📊 Configuration Status:")
+    # Determine environment
+    environment = "PRODUCTION" if IS_PRODUCTION else "DEVELOPMENT"
+    env_icon = "🚀" if IS_PRODUCTION else "💻"
+    
+    print(f"\n{env_icon} Environment: {environment}")
+    
+    # Database info
+    if IS_PRODUCTION:
+        db_type = "PostgreSQL" if "postgresql" in os.getenv("DATABASE_URL", "") else "Unknown"
+        print(f"📊 Database: {db_type} (Production)")
+    else:
+        print(f"📊 Database: SQLite (Development)")
+    
+    print("\n📋 Configuration Status:")
     for service, status in validation.items():
         icon = "✅" if "configured" in status else "⚠️"
         print(f"  {icon} {service.capitalize()}: {status}")
     
-    print("\n🌐 Server Information:")
-    print(f"  Web Interface: http://{config.HOST}:{config.PORT}")
-    print(f"  API Documentation: http://{config.HOST}:{config.PORT}/api/docs")
-    print(f"  Health Check: http://{config.HOST}:{config.PORT}/api/health")
+    # Determine host and port based on environment
+    if IS_PRODUCTION:
+        # Production settings for Render
+        host = "0.0.0.0"
+        port = int(os.getenv("PORT", 10000))
+        reload = False
+        
+        # Render provides the public URL
+        render_service_name = os.getenv("RENDER_SERVICE_NAME", "your-service")
+        public_url = f"https://{render_service_name}.onrender.com"
+        
+        print("\n🌐 Server Information (Production):")
+        print(f"  Internal: http://{host}:{port}")
+        print(f"  Public URL: {public_url}")
+        print(f"  API Documentation: {public_url}/api/docs")
+        print(f"  Health Check: {public_url}/api/health")
+    else:
+        # Development settings
+        host = config.HOST
+        port = config.PORT
+        reload = True
+        
+        print("\n🌐 Server Information (Development):")
+        print(f"  Web Interface: http://{host}:{port}")
+        print(f"  API Documentation: http://{host}:{port}/api/docs")
+        print(f"  Health Check: http://{host}:{port}/api/health")
     
     print("\n✨ Enhanced Features:")
     print(f"  • Comprehensive Excel Export: {'✅' if EXCEL_AVAILABLE else '❌ Install xlsxwriter'}")
     print(f"  • Database Storage with Cache Fallback: ✅")
     print(f"  • Genius API Integration: {'✅' if os.getenv('GENIUS_API_KEY') else '⚠️ Set GENIUS_API_KEY'}")
     print(f"  • Enhanced Confidence Scoring: ✅")
+    print(f"  • Async Processing: ✅")
+    print(f"  • Multi-Source Aggregation: ✅")
+    
+    # Additional production features
+    if IS_PRODUCTION:
+        print("\n🔒 Production Features:")
+        print(f"  • Auto-scaling: {'✅' if os.getenv('RENDER') else '❌'}")
+        print(f"  • SSL/HTTPS: ✅")
+        print(f"  • Persistent Storage: {'✅' if 'postgresql' in os.getenv('DATABASE_URL', '') else '❌'}")
+        print(f"  • Health Monitoring: ✅")
+        
+        # Check memory limits for free tier warning
+        if os.getenv("RENDER_PLAN", "free") == "free":
+            print("\n⚠️  Free Tier Limitations:")
+            print("  • 512MB RAM limit")
+            print("  • 750 hours/month")
+            print("  • Service spins down after 15 min inactivity")
+            print("  • Database expires after 90 days")
+    
+    # API Statistics
+    try:
+        # Quick check if database is accessible
+        db = app.state.db_manager
+        if db.test_connection():
+            stats = db.get_stats()
+            if stats and not stats.get("error"):
+                print("\n📊 Database Statistics:")
+                print(f"  • Total Tracks: {stats.get('total_tracks', 0)}")
+                print(f"  • Average Confidence: {stats.get('avg_confidence', 0):.1f}%")
+                print(f"  • Tracks with Lyrics: {stats.get('tracks_with_lyrics', 0)}")
+                print(f"  • Spotify Coverage: {stats.get('spotify_coverage', 0)}")
+                print(f"  • YouTube Coverage: {stats.get('youtube_coverage', 0)}")
+    except Exception as e:
+        logger.debug(f"Could not load database stats: {e}")
     
     print("\n🚀 Starting server...")
     print("=" * 60)
     
-    uvicorn.run(
-        "run:app",
-        host=config.HOST,
-        port=config.PORT,
-        reload=True,
-        log_level="info"
-    )
+    # Configure uvicorn based on environment
+    if IS_PRODUCTION:
+        print(f"Running on port {port} (production mode)")
+        print("Note: Render will handle SSL termination and provide HTTPS")
+        
+        uvicorn.run(
+            "run:app",
+            host=host,
+            port=port,
+            reload=False,  # No reload in production
+            log_level="info",
+            access_log=True,  # Enable access logs in production
+            workers=1  # Single worker for free tier, increase for paid plans
+        )
+    else:
+        print(f"Running on http://{host}:{port} (development mode with auto-reload)")
+        
+        uvicorn.run(
+            "run:app",
+            host=host,
+            port=port,
+            reload=True,  # Auto-reload in development
+            log_level="info",
+            reload_dirs=["src", "templates", "static"],  # Watch these directories
+            reload_includes=["*.py", "*.html", "*.css", "*.js"]  # Watch these file types
+        )

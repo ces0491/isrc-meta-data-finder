@@ -94,9 +94,9 @@ python run.py
 
 The server will start at:
 
-- 🌐 **Web Interface**: [http://localhost:5000]
-- 📚 **API Documentation**: [http://localhost:5000/api/docs]
-- 💚 **Health Check**: [http://localhost:5000/api/health]
+- 🌐 **Web Interface**: [http://localhost:5000](http://localhost:5000)
+- 📚 **API Documentation**: [http://localhost:5000/api/docs](http://localhost:5000/api/docs)
+- 💚 **Health Check**: [http://localhost:5000/api/health](http://localhost:5000/api/health)
 
 ## 📊 API Usage
 
@@ -203,7 +203,7 @@ prism-analytics/
     ├── cache/              # API response cache
     └── exports/            # Generated export files
 
-```text
+```
 
 ## 📈 Confidence Scoring System
 

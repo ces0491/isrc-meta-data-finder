@@ -1,0 +1,52 @@
+services:
+  # Web Service for PRISM Analytics
+  - type: web
+    name: prism-analytics-engine
+    runtime: python
+    region: oregon  # Choose: oregon, singapore, frankfurt, ohio
+    plan: free  # Options: free, starter ($7/month), standard ($25/month)
+    
+    # Build configuration - Simplified
+    buildCommand: |
+      pip install --upgrade pip
+      pip install -r requirements.txt
+    
+    # Start command
+    startCommand: uvicorn run:app --host 0.0.0.0 --port $PORT
+    
+    # Health check
+    healthCheckPath: /api/health
+    
+    # Environment variables
+    envVars:
+      # System
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: SECRET_KEY
+        generateValue: true
+      - key: HOST
+        value: 0.0.0.0
+      
+      # Database connection (linked from database below)
+      - key: DATABASE_URL
+        fromDatabase:
+          name: prism-postgres-db
+          property: connectionString
+      
+      # Cache settings
+      - key: CACHE_TTL_HOURS
+        value: "24"
+      
+      # Production flag
+      - key: RENDER
+        value: "true"
+    
+    # Auto-deploy from GitHub
+    autoDeploy: true
+
+# PostgreSQL Database
+databases:
+  - name: prism-postgres-db
+    plan: free  # Options: free (90 days), starter ($7/month)
+    databaseName: prism_analytics
+    user: prism_user

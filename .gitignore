@@ -16,9 +16,13 @@ parts/
 sdist/
 var/
 wheels/
+share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+MANIFEST
+pip-wheel-metadata/
+*.dist-info/
 
 # Virtual Environment
 .env
@@ -28,6 +32,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+.python-version
 
 # IDE
 .vscode/
@@ -35,6 +40,11 @@ venv.bak/
 *.swp
 *.swo
 *~
+.project
+.pydevproject
+.settings/
+*.sublime-project
+*.sublime-workspace
 
 # OS
 .DS_Store
@@ -44,26 +54,94 @@ venv.bak/
 .Trashes
 ehthumbs.db
 Thumbs.db
+desktop.ini
 
 # Project specific
+logs/
 logs/*.log
+data/
 data/backups/*
 data/cache/*
 data/exports/*
+data/*.db
+data/prism_analytics.db
+data/prism_metadata.db
 !data/cache/.gitkeep
 !data/exports/.gitkeep
 
 # API Keys and secrets
 config/secrets.py
+.env.local
+.env.production
+*.pem
+*.key
 
-# Flask
+# Flask/FastAPI
 instance/
 .webassets-cache
+htmlcov/
 
 # Testing
 .pytest_cache/
 .coverage
-htmlcov/
+.coverage.*
+coverage.xml
+*.cover
+.hypothesis/
+.tox/
+nosetests.xml
+
+# Documentation
+docs/_build/
+docs/.doctrees
+site/
 
 # Development
 *.log
+*.pid
+*.seed
+*.log.*
+*.sqlite
+*.sqlite3
+*.db-journal
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# pytype static type analyzer
+.pytype/
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Render specific
+.render/
+
+# Node (if you add any JS tooling)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Backup files
+*.bak
+*.backup
+*~
+*.orig
+
+# Temporary files
+tmp/
+temp/
+*.tmp
