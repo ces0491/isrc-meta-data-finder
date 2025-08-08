@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PRISM Analytics - Enhanced Metadata Intelligence</title>
+    <title>Music Metadata Intelligence</title>
     <link rel="stylesheet" href="/static/css/prism-theme.css">
     <style>
         :root {
@@ -759,7 +759,7 @@
                 if (response.ok) {
                     const blob = await response.blob();
                     const extension = format === 'excel' ? 'xlsx' : format;
-                    downloadFile(blob, `prism_enhanced_${new Date().toISOString().slice(0,10)}.${extension}`);
+                    downloadFile(blob, `isrc_meta_data_finder_${new Date().toISOString().slice(0,10)}.${extension}`);
                 } else {
                     const error = await response.json();
                     alert(error.detail || 'Export failed');
@@ -775,7 +775,7 @@
             // Get the last analysis data (you might want to store this globally)
             const data = { isrc: isrc, message: 'Full data would be here' };
             const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-            downloadFile(blob, `prism_${isrc}_analysis.json`);
+            downloadFile(blob, `isrc_meta_data_${isrc}_analysis.json`);
         }
         
         function downloadFile(blob, filename) {

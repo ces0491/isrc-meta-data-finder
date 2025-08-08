@@ -1,5 +1,5 @@
 // PRISM Analytics - ISRC Metadata Analyzer Frontend
-class PRISMAnalyzer {
+class ISRCAnalyzer {
     constructor() {
         this.baseUrl = window.location.origin;
         this.init();
@@ -150,13 +150,13 @@ class PRISMAnalyzer {
     downloadMockFile(data, format, isrc) {
         const content = format === 'json' ? 
             JSON.stringify(data, null, 2) : 
-            `PRISM Analytics Export\nISRC: ${isrc}\nFormat: ${format}\nTimestamp: ${data.timestamp}`;
+            `ISRC Meta Data Export\nISRC: ${isrc}\nFormat: ${format}\nTimestamp: ${data.timestamp}`;
         
         const blob = new Blob([content], { type: 'text/plain' });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `prism-metadata-${isrc}.${format}`;
+        a.download = `isrc-metadata-${isrc}.${format}`;
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
@@ -212,5 +212,5 @@ class PRISMAnalyzer {
 
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    new PRISMAnalyzer();
+    new ISRCAnalyzer();
 });
