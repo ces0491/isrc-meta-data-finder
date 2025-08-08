@@ -640,29 +640,31 @@
         <!-- API Status Bar -->
         <div class="api-status-bar">
             <span style="font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">System Status:</span>
-            <div class="api-badge active">
+            <div class="api-badge" id="spotify-status" title="Requires API credentials">
                 <span class="status-dot"></span>
                 Spotify
             </div>
-            <div class="api-badge active">
+            <div class="api-badge" id="youtube-status" title="Requires API key">
                 <span class="status-dot"></span>
                 YouTube
             </div>
-            <div class="api-badge active">
+            <div class="api-badge active" id="musicbrainz-status" title="No API key required">
                 <span class="status-dot"></span>
                 MusicBrainz
             </div>
-            <div class="api-badge active">
+            <div class="api-badge" id="genius-status" title="Requires API key">
                 <span class="status-dot"></span>
                 Genius
             </div>
-            <div class="api-badge">
+            <div class="api-badge" title="Coming Soon - Not yet implemented">
                 <span class="status-dot"></span>
                 Last.fm
+                <sup style="color: var(--precise-red); font-size: 0.7rem;">SOON</sup>
             </div>
-            <div class="api-badge">
+            <div class="api-badge" title="Coming Soon - Not yet implemented">
                 <span class="status-dot"></span>
                 Discogs
+                <sup style="color: var(--precise-red); font-size: 0.7rem;">SOON</sup>
             </div>
         </div>
 
@@ -702,7 +704,7 @@
             </div>
 
             <button class="btn btn-primary" onclick="performAnalysis()">
-                Get Metadata
+                Analyze Metadata
             </button>
         </div>
 
@@ -718,8 +720,33 @@
                 <h2 class="section-title">Bulk Operations</h2>
             </div>
 
+            <!-- File Upload -->
             <div class="input-group">
-                <label class="input-label">Enter Multiple ISRCs</label>
+                <label class="input-label">Upload CSV File</label>
+                <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem;">
+                    <input type="file" 
+                           id="csv-upload" 
+                           accept=".csv"
+                           style="display: none;"
+                           onchange="handleFileUpload(event)">
+                    <button class="btn btn-secondary" onclick="document.getElementById('csv-upload').click()">
+                        Choose File
+                    </button>
+                    <span id="file-name" style="color: var(--medium-gray);">No file selected</span>
+                    <button class="btn btn-secondary" onclick="downloadSampleCSV()" title="Download sample CSV format">
+                        Download Sample
+                    </button>
+                </div>
+                <div style="font-size: 0.875rem; color: var(--medium-gray); margin-bottom: 1rem;">
+                    CSV should contain ISRC codes in any column. Format: USRC17607839
+                </div>
+                <div id="upload-result" style="display: none; padding: 1rem; background: var(--light-gray); margin-bottom: 1rem;">
+                    <p style="margin: 0;"><strong>File loaded:</strong> <span id="isrc-count">0</span> ISRCs found</p>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label class="input-label">Or Enter Multiple ISRCs Manually</label>
                 <textarea id="bulk-isrcs" 
                           class="input-field" 
                           rows="4"
@@ -727,6 +754,9 @@
             </div>
 
             <div class="export-actions">
+                <button class="btn btn-primary" onclick="analyzeBulk()">
+                    Analyze All
+                </button>
                 <button class="btn btn-secondary" onclick="exportBulk('csv')">
                     Export CSV
                 </button>
@@ -753,6 +783,7 @@
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
             loadDatabaseStats();
+            checkAPIStatus();
             
             // Auto-format ISRC input
             const isrcInput = document.getElementById('isrc-input');
@@ -767,6 +798,188 @@
                 }
             });
         });
+        
+        async function checkAPIStatus() {
+            try {
+                const response = await fetch('/api/health');
+                const health = await response.json();
+                
+                // Update API badges based on actual status
+                const apiStatuses = health.apis || {};
+                
+                // Update specific API badges
+                const apiMapping = {
+                    'spotify': 'spotify-status',
+                    'youtube': 'youtube-status',
+                    'musicbrainz': 'musicbrainz-status',
+                    'genius': 'genius-status'
+                };
+                
+                for (const [apiName, elementId] of Object.entries(apiMapping)) {
+                    const badge = document.getElementById(elementId);
+                    if (badge) {
+                        if (apiStatuses[apiName] === 'operational' || apiStatuses[apiName] === 'configured') {
+                            badge.classList.add('active');
+                        } else {
+                            badge.classList.remove('active');
+                            // Add warning if not configured
+                            if (!badge.querySelector('.config-warning')) {
+                                const warning = document.createElement('span');
+                                warning.className = 'config-warning';
+                                warning.style.cssText = 'color: var(--precise-red); font-size: 0.7rem; vertical-align: super;';
+                                warning.textContent = '!';
+                                warning.title = 'API key not configured';
+                                badge.appendChild(warning);
+                            }
+                        }
+                    }
+                }
+                
+                // MusicBrainz is always active (no API key needed)
+                const mbBadge = document.getElementById('musicbrainz-status');
+                if (mbBadge) {
+                    mbBadge.classList.add('active');
+                }
+                
+            } catch (error) {
+                console.error('Failed to check API status:', error);
+            }
+        }
+        
+        async function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            document.getElementById('file-name').textContent = file.name;
+            
+            // Option 1: Parse CSV client-side
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const content = e.target.result;
+                const isrcs = extractISRCsFromCSV(content);
+                
+                if (isrcs.length > 0) {
+                    document.getElementById('bulk-isrcs').value = isrcs.join('\n');
+                    document.getElementById('isrc-count').textContent = isrcs.length;
+                    document.getElementById('upload-result').style.display = 'block';
+                } else {
+                    alert('No valid ISRCs found in the CSV file. Please ensure your file contains valid ISRC codes (e.g., USRC17607839)');
+                }
+            };
+            reader.readAsText(file);
+            
+            // Option 2: Upload to server (for larger files)
+            if (file.size > 1048576) { // If file > 1MB, use server processing
+                uploadToServer(file);
+            }
+        }
+        
+        async function uploadToServer(file) {
+            showLoading('Uploading and processing CSV file...');
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            try {
+                const response = await fetch('/api/upload/csv', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    alert(`File uploaded successfully!\n\n${data.isrcs_found} ISRCs found and queued for processing.`);
+                    loadDatabaseStats();
+                } else {
+                    alert(data.detail || 'Upload failed');
+                }
+            } catch (error) {
+                alert('Upload error: ' + error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+        
+        function extractISRCsFromCSV(csvContent) {
+            const lines = csvContent.split('\n');
+            const isrcs = [];
+            const isrcPattern = /^[A-Z]{2}[A-Z0-9]{3}[0-9]{7}$/;
+            
+            for (let line of lines) {
+                // Split by comma and check each cell
+                const cells = line.split(',');
+                for (let cell of cells) {
+                    const cleaned = cell.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+                    if (isrcPattern.test(cleaned)) {
+                        isrcs.push(cleaned);
+                    }
+                }
+            }
+            
+            // Remove duplicates
+            return [...new Set(isrcs)];
+        }
+        
+        async function analyzeBulk() {
+            const isrcs = document.getElementById('bulk-isrcs').value.trim();
+            
+            if (!isrcs) {
+                alert('Please enter ISRCs or upload a CSV file');
+                return;
+            }
+            
+            // Parse ISRCs from textarea
+            const isrcList = extractISRCsFromText(isrcs);
+            
+            if (isrcList.length === 0) {
+                alert('No valid ISRCs found');
+                return;
+            }
+            
+            if (isrcList.length > 100) {
+                if (!confirm(`You're about to analyze ${isrcList.length} ISRCs. This may take several minutes. Continue?`)) {
+                    return;
+                }
+            }
+            
+            showLoading(`Analyzing ${isrcList.length} ISRCs...`);
+            
+            try {
+                const response = await fetch('/api/bulk-analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        isrcs: isrcList,
+                        comprehensive: false
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    alert(`Analysis complete!\n\nSuccessful: ${data.successful}\nFailed: ${data.failed}\n\nUse export buttons to download results.`);
+                    
+                    // Store results for export
+                    window.bulkAnalysisResults = data.results;
+                    
+                    // Refresh stats
+                    loadDatabaseStats();
+                } else {
+                    alert(data.detail || 'Bulk analysis failed');
+                }
+            } catch (error) {
+                alert('Network error: ' + error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+        
+        function extractISRCsFromText(text) {
+            const isrcPattern = /[A-Z]{2}[A-Z0-9]{3}[0-9]{7}/g;
+            const matches = text.toUpperCase().match(isrcPattern);
+            return matches ? [...new Set(matches)] : [];
+        }
         
         async function loadDatabaseStats() {
             try {
@@ -922,20 +1135,29 @@
             const isrcs = document.getElementById('bulk-isrcs').value.trim();
             
             if (!isrcs) {
-                alert('Please enter ISRCs');
+                alert('Please enter ISRCs or upload a CSV file first');
                 return;
             }
             
-            showLoading(`Generating ${format.toUpperCase()} export...`);
+            // Extract ISRCs from text
+            const isrcList = extractISRCsFromText(isrcs);
+            if (isrcList.length === 0) {
+                alert('No valid ISRCs found');
+                return;
+            }
+            
+            showLoading(`Generating ${format.toUpperCase()} export for ${isrcList.length} ISRCs...`);
             
             try {
                 const endpoint = format === 'excel' ? '/api/bulk-excel' : '/api/bulk-csv';
-                const response = await fetch(endpoint + '?' + new URLSearchParams({ isrcs: isrcs }));
+                const isrcsParam = isrcList.join(',');
+                const response = await fetch(endpoint + '?' + new URLSearchParams({ isrcs: isrcsParam }));
                 
                 if (response.ok) {
                     const blob = await response.blob();
                     const extension = format === 'excel' ? 'xlsx' : format;
-                    downloadFile(blob, `prism_metadata_export_${new Date().toISOString().slice(0,10)}.${extension}`);
+                    const timestamp = new Date().toISOString().slice(0,10);
+                    downloadFile(blob, `prism_metadata_export_${timestamp}.${extension}`);
                 } else {
                     const error = await response.json();
                     alert(error.detail || 'Export failed');
@@ -952,6 +1174,23 @@
             const data = window.lastAnalysisData || { isrc: isrc, message: 'Full data would be here' };
             const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
             downloadFile(blob, `prism_metadata_${isrc}.json`);
+        }
+        
+        function downloadSampleCSV() {
+            const sampleContent = `ISRC,Title,Artist,Label,Notes
+USRC17607839,Sample Track 1,Artist Name,Label A,Priority track
+GBUM71505080,Sample Track 2,Another Artist,Label B,New release
+DEUM21900123,Sample Track 3,Third Artist,Label C,Needs review
+FRFR21800456,Sample Track 4,Fourth Artist,Label A,
+USCA21602485,Sample Track 5,Fifth Artist,Label D,High value
+
+# This is a sample CSV file for PRISM Analytics Engine
+# You can include ISRCs in any column
+# The system will automatically detect and extract valid ISRC codes
+# ISRCs should be 12 characters: 2 country code + 3 registrant + 2 year + 5 designation`;
+            
+            const blob = new Blob([sampleContent], { type: 'text/csv' });
+            downloadFile(blob, 'prism_sample_isrcs.csv');
         }
         
         function downloadFile(blob, filename) {
