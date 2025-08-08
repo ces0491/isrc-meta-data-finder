@@ -1,12 +1,13 @@
 """
 PRISM Analytics - API Routes
 RESTful API endpoints for metadata analysis
+Python 3.11+ with modern typing and Pydantic v2
 """
 
 from fastapi import APIRouter, HTTPException, Query, UploadFile, File, BackgroundTasks, Request, Depends
 from fastapi.responses import Response, StreamingResponse
 from pydantic import BaseModel, Field
-from typing import List, Optional, Dict, Any
+from typing import Any  # Still need Any from typing
 import json
 import io
 import csv
@@ -33,18 +34,18 @@ class ISRCAnalysisResponse(BaseModel):
     """ISRC analysis response"""
     isrc: str
     status: str
-    metadata: Dict[str, Any]
+    metadata: dict[str, Any]
     confidence_score: float
     data_completeness: float
     quality_rating: str
-    sources: List[str]
+    sources: list[str]
     processing_time_ms: int
     cached: bool
     timestamp: str
 
 class BulkAnalysisRequest(BaseModel):
     """Bulk analysis request"""
-    isrcs: List[str] = Field(..., description="List of ISRCs to analyze", max_items=100)
+    isrcs: list[str] = Field(..., description="List of ISRCs to analyze", max_length=100)
     comprehensive: bool = Field(default=False, description="Comprehensive analysis (slower)")
     parallel: bool = Field(default=True, description="Process in parallel")
 
@@ -53,14 +54,14 @@ class BulkAnalysisResponse(BaseModel):
     total: int
     successful: int
     failed: int
-    results: List[Dict[str, Any]]
-    errors: List[Dict[str, str]]
+    results: list[dict[str, Any]]
+    errors: list[dict[str, str]]
     processing_time_seconds: float
     timestamp: str
 
 class ExportRequest(BaseModel):
     """Export request"""
-    isrcs: List[str] = Field(..., description="ISRCs to export")
+    isrcs: list[str] = Field(..., description="ISRCs to export")
     format: str = Field(default="csv", description="Export format: csv, excel, json, xml")
     include_confidence: bool = Field(default=True)
     include_technical: bool = Field(default=True)
@@ -87,7 +88,7 @@ class StatsResponse(BaseModel):
 
 # ============= DEPENDENCIES =============
 
-async def get_app_state(request: Request) -> Dict[str, Any]:
+async def get_app_state(request: Request) -> dict[str, Any]:
     """Get app state from request"""
     return {
         "metadata_collector": request.app.state.metadata_collector,
@@ -109,7 +110,7 @@ def clean_isrc(isrc: str) -> str:
     cleaned = re.sub(r'[-\s]', '', isrc.upper().strip())
     return cleaned
 
-def extract_isrcs_from_text(text: str) -> List[str]:
+def extract_isrcs_from_text(text: str) -> list[str]:
     """Extract ISRCs from text"""
     pattern = r'\b[A-Z]{2}[-\s]?[A-Z0-9]{3}[-\s]?[0-9]{7}\b'
     matches = re.findall(pattern, text.upper())
@@ -127,7 +128,7 @@ def extract_isrcs_from_text(text: str) -> List[str]:
 @router.post("/analyze", response_model=ISRCAnalysisResponse)
 async def analyze_single_isrc(
     request: ISRCAnalysisRequest,
-    app_state: Dict[str, Any] = Depends(get_app_state)
+    app_state: dict[str, Any] = Depends(get_app_state)
 ):
     """
     Analyze a single ISRC with comprehensive metadata collection
@@ -193,7 +194,7 @@ async def analyze_single_isrc(
 async def analyze_bulk_isrcs(
     request: BulkAnalysisRequest,
     background_tasks: BackgroundTasks,
-    app_state: Dict[str, Any] = Depends(get_app_state)
+    app_state: dict[str, Any] = Depends(get_app_state)
 ):
     """
     Analyze multiple ISRCs in bulk
@@ -243,7 +244,7 @@ async def analyze_bulk_isrcs(
 @router.post("/export")
 async def export_metadata(
     request: ExportRequest,
-    app_state: Dict[str, Any] = Depends(get_app_state)
+    app_state: dict[str, Any] = Depends(get_app_state)
 ):
     """
     Export metadata in various formats
@@ -317,7 +318,7 @@ async def export_metadata(
 async def get_track_metadata(
     isrc: str,
     refresh: bool = Query(default=False, description="Force refresh from sources"),
-    app_state: Dict[str, Any] = Depends(get_app_state)
+    app_state: dict[str, Any] = Depends(get_app_state)
 ):
     """
     Get metadata for a specific ISRC
@@ -363,7 +364,7 @@ async def search_tracks(
     type: str = Query(default="all", description="Search type: title, artist, album, all"),
     limit: int = Query(default=10, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
-    app_state: Dict[str, Any] = Depends(get_app_state)
+    app_state: dict[str, Any] = Depends(get_app_state)
 ):
     """
     Search for tracks in the database
@@ -423,7 +424,7 @@ async def search_tracks(
         db_manager.close_session(session)
 
 @router.get("/stats", response_model=StatsResponse)
-async def get_statistics(app_state: Dict[str, Any] = Depends(get_app_state)):
+async def get_statistics(app_state: dict[str, Any] = Depends(get_app_state)):
     """
     Get system statistics
     
@@ -479,8 +480,8 @@ async def get_statistics(app_state: Dict[str, Any] = Depends(get_app_state)):
 @router.post("/upload/csv")
 async def upload_csv_file(
     file: UploadFile = File(...),
-    background_tasks: Optional[BackgroundTasks] = None,
-    app_state: Dict[str, Any] = Depends(get_app_state)
+    background_tasks: BackgroundTasks | None = None,
+    app_state: dict[str, Any] = Depends(get_app_state)
 ):
     """
     Upload CSV file with ISRCs for batch processing
@@ -543,7 +544,7 @@ async def upload_csv_file(
 @router.delete("/cache/{isrc}")
 async def clear_cache_for_isrc(
     isrc: str,
-    app_state: Dict[str, Any] = Depends(get_app_state)
+    app_state: dict[str, Any] = Depends(get_app_state)
 ):
     """
     Clear cached data for a specific ISRC
@@ -585,7 +586,7 @@ async def clear_cache_for_isrc(
 @router.get("/credits/{isrc}")
 async def get_track_credits(
     isrc: str,
-    app_state: Dict[str, Any] = Depends(get_app_state)
+    app_state: dict[str, Any] = Depends(get_app_state)
 ):
     """
     Get detailed credits for a track
@@ -631,7 +632,7 @@ async def get_track_credits(
 @router.get("/lyrics/{isrc}")
 async def get_track_lyrics(
     isrc: str,
-    app_state: Dict[str, Any] = Depends(get_app_state)
+    app_state: dict[str, Any] = Depends(get_app_state)
 ):
     """
     Get lyrics for a track

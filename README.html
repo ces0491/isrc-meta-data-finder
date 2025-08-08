@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.450">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>readme</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="README_files/libs/clipboard/clipboard.min.js"></script>
+<script src="README_files/libs/quarto-html/quarto.js"></script>
+<script src="README_files/libs/quarto-html/popper.min.js"></script>
+<script src="README_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="README_files/libs/quarto-html/anchor.min.js"></script>
+<link href="README_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="README_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="README_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="README_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="README_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="fullcontent">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+
+
+<section id="music-metadata-intelligence-system" class="level1">
+<h1>🎵 Music Metadata Intelligence System</h1>
+<p><img src="https://img.shields.io/badge/PRISM-Analytics-E50914?style=for-the-badge&amp;logo=music&amp;logoColor=white.png" class="img-fluid" alt="PRISM Analytics"> <img src="https://img.shields.io/badge/Python-3.8+-1A1A1A?style=for-the-badge&amp;logo=python&amp;logoColor=white" class="img-fluid" alt="Python"> <img src="https://img.shields.io/badge/FastAPI-0.104.1-009688?style=for-the-badge&amp;logo=fastapi&amp;logoColor=white" class="img-fluid" alt="FastAPI"> <img src="https://img.shields.io/badge/Status-Production_Ready-28a745?style=for-the-badge.png" class="img-fluid" alt="Status"></p>
+<p>Metadata aggregation tool using ISRC codes.</p>
+<section id="key-features" class="level2">
+<h2 class="anchored" data-anchor-id="key-features">✨ Key Features</h2>
+<ul>
+<li>🎵 <strong>Multi-Source Aggregation</strong>: Spotify, YouTube, MusicBrainz, Genius, Last FM and Discogs</li>
+<li>📊 <strong>8-Factor Confidence Scoring</strong>: Metadata quality assessment</li>
+<li>💾 <strong>Persistent Storage</strong>: SQLite/PostgreSQL with full ORM support</li>
+<li>⚡ <strong>Async Processing</strong>: Parallel data collection</li>
+<li>📈 <strong>Multiple Export Formats</strong>: CSV, Excel, JSON</li>
+<li>🎨 <strong>Web Interface</strong>: Intuitive, responsive UI</li>
+<li>📝 <strong>Lyrics &amp; Credits</strong>: Songwriter and producer credits</li>
+<li>🔧 <strong>RESTful API</strong>: Full OpenAPI documentation</li>
+<li>🚦 <strong>Rate Limiting</strong>: Responsible API usage with automatic throttling</li>
+<li>📦 <strong>Bulk Operations</strong>: Process hundreds of ISRCs efficiently</li>
+</ul>
+</section>
+<section id="quick-start" class="level2">
+<h2 class="anchored" data-anchor-id="quick-start">🚀 Quick Start</h2>
+<section id="prerequisites" class="level3">
+<h3 class="anchored" data-anchor-id="prerequisites">Prerequisites</h3>
+<ul>
+<li>Python 3.11 or higher</li>
+<li>pip (Python package manager)</li>
+<li>At least one API key (Spotify minimum)</li>
+</ul>
+</section>
+<section id="clone-setup" class="level3">
+<h3 class="anchored" data-anchor-id="clone-setup">1. Clone &amp; Setup</h3>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Clone the repository</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone https://github.com/ces0491/isrc-meta-data-finder.git</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> isrc-meta-data-finder</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Run automated setup</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> setup.py</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The setup script will:</p>
+<ul>
+<li>Check Python version</li>
+<li>Install all dependencies</li>
+<li>Create directory structure</li>
+<li>Generate <code>.env</code> configuration file</li>
+<li>Initialize the database</li>
+<li>Test API connections</li>
+</ul>
+</section>
+<section id="configure-api-keys" class="level3">
+<h3 class="anchored" data-anchor-id="configure-api-keys">2. Configure API Keys</h3>
+<p>Edit <code>.env</code> and add your API credentials:</p>
+<pre class="env"><code>
+# Required for basic functionality
+
+SPOTIFY_CLIENT_ID=your_spotify_client_id
+SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
+
+# Optional but recommended
+
+YOUTUBE_API_KEY=your_youtube_api_key
+GENIUS_API_KEY=your_genius_api_key
+
+# Optional
+
+LASTFM_API_KEY=your_lastfm_api_key
+DISCOGS_USER_TOKEN=your_discogs_token
+
+*MusicBrainz does not require an API key*
+</code></pre>
+<section id="getting-api-keys" class="level4">
+<h4 class="anchored" data-anchor-id="getting-api-keys">Getting API Keys</h4>
+<ul>
+<li><strong>Spotify</strong>: <a href="https://developer.spotify.com/dashboard">Spotify for Developers</a> (FREE)</li>
+<li><strong>YouTube</strong>: <a href="https://console.cloud.google.com/">Google Cloud Console</a> (FREE with limits)</li>
+<li><strong>Genius</strong>: <a href="https://genius.com/api-clients">Genius API</a> (FREE)</li>
+<li><strong>Last.fm</strong>: <a href="https://www.last.fm/api/account/create">Last.fm API</a> (FREE)</li>
+</ul>
+</section>
+</section>
+<section id="start-the-server" class="level3">
+<h3 class="anchored" data-anchor-id="start-the-server">3. Start the Server</h3>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> run.py</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The server will start at:</p>
+<ul>
+<li>🌐 <strong>Web Interface</strong>: http://localhost:5000</li>
+<li>📚 <strong>API Documentation</strong>: http://localhost:5000/api/docs</li>
+<li>💚 <strong>Health Check</strong>: http://localhost:5000/api/health</li>
+</ul>
+</section>
+</section>
+<section id="api-usage" class="level2">
+<h2 class="anchored" data-anchor-id="api-usage">📊 API Usage</h2>
+<section id="analyze-single-isrc" class="level3">
+<h3 class="anchored" data-anchor-id="analyze-single-isrc">Analyze Single ISRC</h3>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-X</span> POST <span class="st">"http://localhost:5000/api/analyze-enhanced"</span> <span class="dt">\</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">-H</span> <span class="st">"Content-Type: application/json"</span> <span class="dt">\</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">-d</span> <span class="st">'{</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="st">    "isrc": "USRC17607839",</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="st">    "include_lyrics": true,</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="st">    "include_credits": true</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="st">  }'</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<section id="response-example" class="level4">
+<h4 class="anchored" data-anchor-id="response-example">Response Example</h4>
+<div class="sourceCode" id="cb5"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"isrc"</span><span class="fu">:</span> <span class="st">"USRC17607839"</span><span class="fu">,</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"title"</span><span class="fu">:</span> <span class="st">"Track Title"</span><span class="fu">,</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"artist"</span><span class="fu">:</span> <span class="st">"Artist Name"</span><span class="fu">,</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"album"</span><span class="fu">:</span> <span class="st">"Album Name"</span><span class="fu">,</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"confidence"</span><span class="fu">:</span> <span class="fl">92.5</span><span class="fu">,</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"confidence_details"</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"quality_rating"</span><span class="fu">:</span> <span class="st">"Excellent"</span><span class="fu">,</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"score_breakdown"</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"data_sources"</span><span class="fu">:</span> <span class="fl">95.0</span><span class="fu">,</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"essential_fields"</span><span class="fu">:</span> <span class="fl">100.0</span><span class="fu">,</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"audio_features"</span><span class="fu">:</span> <span class="fl">85.0</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">},</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"sources"</span><span class="fu">:</span> <span class="ot">[</span><span class="st">"Spotify"</span><span class="ot">,</span> <span class="st">"MusicBrainz"</span><span class="ot">,</span> <span class="st">"YouTube"</span><span class="ot">,</span> <span class="st">"Genius"</span><span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"spotify_id"</span><span class="fu">:</span> <span class="st">"4iV5W9uYEdYUVa79Axb7Rh"</span><span class="fu">,</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"youtube_video_id"</span><span class="fu">:</span> <span class="st">"dQw4w9WgXcQ"</span><span class="fu">,</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"tempo"</span><span class="fu">:</span> <span class="fl">120.0</span><span class="fu">,</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"key"</span><span class="fu">:</span> <span class="dv">5</span><span class="fu">,</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"energy"</span><span class="fu">:</span> <span class="fl">0.75</span><span class="fu">,</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"processing_time_ms"</span><span class="fu">:</span> <span class="dv">1234</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+</section>
+<section id="bulk-export" class="level3">
+<h3 class="anchored" data-anchor-id="bulk-export">Bulk Export</h3>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="co"># CSV Export</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="st">"http://localhost:5000/api/bulk-csv?isrcs=USRC17607839,GBUM71505080"</span> <span class="dt">\</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span> prism_export.csv</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Excel Export (with formatting and summary)</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="st">"http://localhost:5000/api/bulk-excel?isrcs=USRC17607839,GBUM71505080"</span> <span class="dt">\</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span> prism_export.xlsx</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="kw">```</span><span class="ex">text</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="co">### Search Database</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="kw">```</span>bash</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="st">"http://localhost:5000/api/search?q=Beatles&amp;type=artist&amp;limit=10"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+</section>
+<section id="project-structure" class="level2">
+<h2 class="anchored" data-anchor-id="project-structure">🏗️ Project Structure</h2>
+<pre class="text"><code>prism-analytics/
+├── run.py                  # Main application entry point
+├── setup.py                # Automated setup script
+├── requirements.txt        # Python dependencies
+├── .env                    # API keys and configuration
+│
+├── src/                    # Source code
+│   ├── api/
+│   │   └── routes.py       # API endpoint definitions
+│   ├── models/
+│   │   └── database.py     # SQLAlchemy ORM models
+│   └── services/
+│       ├── api_clients.py  # External API integrations
+│       ├── metadata_collector_async.py  # Async data collection
+│       └── export_services.py          # Export functionality
+│
+├── config/
+│   └── settings.py         # Configuration management
+│
+├── templates/
+│   └── index.html          # Web interface
+│
+├── static/
+│   ├── css/
+│   │   └── prism-theme.css # PRISM brand styling
+│   └── js/
+│       └── app.js          # Frontend functionality
+│
+└── data/
+    ├── prism_analytics.db  # SQLite database
+    ├── cache/              # API response cache
+    └── exports/            # Generated export files
+
+```text
+
+## 📈 Confidence Scoring System
+
+The system uses an 8-factor weighted scoring algorithm:
+
+| Factor | Weight | Description |
+|--------|--------|-------------|
+| Data Sources | 25% | Number of APIs returning data |
+| Essential Fields | 20% | Title, artist, album, duration, release date |
+| Audio Features | 15% | Tempo, key, energy, danceability, valence |
+| External IDs | 10% | Spotify ID, MusicBrainz ID, YouTube ID |
+| Popularity Metrics | 10% | Streaming counts, view counts |
+| Lyrics Availability | 10% | Lyrics and language detection |
+| Credits Completeness | 5% | Songwriter, producer credits |
+| Cross-validation | 5% | Data consistency across sources |
+
+### Quality Ratings
+
+- **Excellent** (90-100%): High confidence, multiple sources agree
+- **Good** (75-89%): Reliable data, minor gaps
+- **Fair** (60-74%): Usable data, some missing elements
+- **Poor** (40-59%): Limited data, needs verification
+- **Insufficient** (&lt;40%): Unreliable, manual review required
+
+## 🔧 Configuration
+
+### Environment Variables
+
+```env
+
+# Server Configuration
+
+HOST=127.0.0.1
+PORT=5000
+SECRET_KEY=your-secret-key-here
+
+# Database (optional - defaults to SQLite)
+
+DATABASE_URL=postgresql://user:pass@localhost/prism
+
+# Cache Settings
+
+CACHE_TTL_HOURS=24
+
+# Rate Limiting (requests per minute)
+
+SPOTIFY_RATE_LIMIT=180
+YOUTUBE_RATE_LIMIT=100
+MUSICBRAINZ_RATE_LIMIT=50
+</code></pre>
+<section id="database-options" class="level3">
+<h3 class="anchored" data-anchor-id="database-options">Database Options</h3>
+<p><strong>SQLite</strong> (Default):</p>
+<ul>
+<li>No configuration needed</li>
+<li>Perfect for development and small deployments</li>
+<li>Database file: <code>data/prism_analytics.db</code></li>
+</ul>
+<p><strong>PostgreSQL</strong> (Production):</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Install PostgreSQL driver</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install psycopg2-binary</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Set in .env</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="va">DATABASE_URL</span><span class="op">=</span>postgresql://user:password@localhost:5432/prism_analytics</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+</section>
+<section id="api-endpoints" class="level2">
+<h2 class="anchored" data-anchor-id="api-endpoints">📊 API Endpoints</h2>
+<table class="table">
+<thead>
+<tr class="header">
+<th>Method</th>
+<th>Endpoint</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>POST</strong></td>
+<td><code>/api/analyze-enhanced</code></td>
+<td>Comprehensive ISRC analysis</td>
+</tr>
+<tr class="even">
+<td><strong>GET</strong></td>
+<td><code>/api/track/{isrc}</code></td>
+<td>Get cached track metadata</td>
+</tr>
+<tr class="odd">
+<td><strong>GET</strong></td>
+<td><code>/api/track/{isrc}/credits</code></td>
+<td>Get detailed credits</td>
+</tr>
+<tr class="even">
+<td><strong>GET</strong></td>
+<td><code>/api/track/{isrc}/lyrics</code></td>
+<td>Get lyrics and copyright info</td>
+</tr>
+<tr class="odd">
+<td><strong>POST</strong></td>
+<td><code>/api/bulk-analyze</code></td>
+<td>Analyze multiple ISRCs</td>
+</tr>
+<tr class="even">
+<td><strong>GET</strong></td>
+<td><code>/api/bulk-csv</code></td>
+<td>Export to CSV</td>
+</tr>
+<tr class="odd">
+<td><strong>GET</strong></td>
+<td><code>/api/bulk-excel</code></td>
+<td>Export to Excel with formatting</td>
+</tr>
+<tr class="even">
+<td><strong>GET</strong></td>
+<td><code>/api/search</code></td>
+<td>Search database</td>
+</tr>
+<tr class="odd">
+<td><strong>GET</strong></td>
+<td><code>/api/stats</code></td>
+<td>Database statistics</td>
+</tr>
+<tr class="even">
+<td><strong>GET</strong></td>
+<td><code>/api/health</code></td>
+<td>Service health check</td>
+</tr>
+<tr class="odd">
+<td><strong>DELETE</strong></td>
+<td><code>/api/cache/{isrc}</code></td>
+<td>Clear cached data</td>
+</tr>
+<tr class="even">
+<td><strong>POST</strong></td>
+<td><code>/api/upload/csv</code></td>
+<td>Upload CSV for batch processing</td>
+</tr>
+</tbody>
+</table>
+<p>Full API documentation available at: http://localhost:5000/api/docs</p>
+</section>
+<section id="use-cases" class="level2">
+<h2 class="anchored" data-anchor-id="use-cases">🎯 Use Cases</h2>
+<section id="record-labels" class="level3">
+<h3 class="anchored" data-anchor-id="record-labels">Record Labels</h3>
+<ul>
+<li>Catalog metadata audit and enrichment</li>
+<li>Missing metadata identification</li>
+<li>Multi-platform availability tracking</li>
+<li>Rights and credits verification</li>
+</ul>
+</section>
+<section id="music-publishers" class="level3">
+<h3 class="anchored" data-anchor-id="music-publishers">Music Publishers</h3>
+<ul>
+<li>Songwriter credit verification</li>
+<li>Publishing split validation</li>
+<li>Cross-platform royalty tracking</li>
+<li>Territory rights management</li>
+</ul>
+</section>
+<section id="music-distributors" class="level3">
+<h3 class="anchored" data-anchor-id="music-distributors">Music Distributors</h3>
+<ul>
+<li>Pre-release metadata validation</li>
+<li>Platform-specific formatting</li>
+<li>ISRC registration verification</li>
+<li>Catalog quality assurance</li>
+</ul>
+</section>
+<section id="data-analysts" class="level3">
+<h3 class="anchored" data-anchor-id="data-analysts">Data Analysts</h3>
+<ul>
+<li>Music industry trend analysis</li>
+<li>Artist performance metrics</li>
+<li>Genre classification studies</li>
+<li>Market intelligence gathering</li>
+</ul>
+</section>
+</section>
+<section id="troubleshooting" class="level2">
+<h2 class="anchored" data-anchor-id="troubleshooting">🐛 Troubleshooting</h2>
+<section id="common-issues" class="level3">
+<h3 class="anchored" data-anchor-id="common-issues">Common Issues</h3>
+<p><strong>ModuleNotFoundError</strong></p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Ensure you're in the project root</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> prism-analytics</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Reinstall dependencies</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install <span class="at">-r</span> requirements.txt</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><strong>Spotify API Error</strong></p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Check your credentials in .env</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Ensure no extra spaces or quotes</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="va">SPOTIFY_CLIENT_ID</span><span class="op">=</span>abc123  <span class="co"># ✅ Correct</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="va">SPOTIFY_CLIENT_ID</span><span class="op">=</span><span class="st">"abc123"</span>  <span class="co"># ❌ Wrong</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><strong>Database Lock Error</strong></p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Delete and recreate database</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span> data/prism_analytics.db</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> run.py  <span class="co"># Will auto-create new database</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><strong>Port Already in Use</strong></p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Change port in .env</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="va">PORT</span><span class="op">=</span>5001</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Or find and kill the process</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="ex">lsof</span> <span class="at">-i</span> :5000  <span class="co"># Mac/Linux</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="fu">netstat</span> <span class="at">-ano</span> <span class="kw">|</span> <span class="ex">findstr</span> :5000  <span class="co"># Windows</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+</section>
+<section id="performance" class="level2">
+<h2 class="anchored" data-anchor-id="performance">📈 Performance</h2>
+<ul>
+<li><strong>Single ISRC Analysis</strong>: ~2-5 seconds</li>
+<li><strong>Bulk Processing</strong>: 100 ISRCs in ~2 minutes</li>
+<li><strong>Database Queries</strong>: &lt;100ms</li>
+<li><strong>Export Generation</strong>: &lt;5 seconds for 1000 records</li>
+<li><strong>API Rate Limits</strong>: Automatically managed</li>
+<li><strong>Concurrent Requests</strong>: Supports async processing</li>
+</ul>
+</section>
+<section id="security-compliance" class="level2">
+<h2 class="anchored" data-anchor-id="security-compliance">🛡️ Security &amp; Compliance</h2>
+<ul>
+<li>✅ API keys stored in environment variables</li>
+<li>✅ SQL injection protection via ORM</li>
+<li>✅ Rate limiting on all endpoints</li>
+<li>✅ CORS headers for web security</li>
+<li>✅ Input validation on all endpoints</li>
+<li>✅ Respectful API usage patterns</li>
+<li>✅ GDPR compliant (no personal data storage)</li>
+</ul>
+</section>
+<section id="contributing" class="level2">
+<h2 class="anchored" data-anchor-id="contributing">🤝 Contributing</h2>
+<p>Contributions are welcome! Please feel free to submit a Pull Request.</p>
+<ol type="1">
+<li>Fork the repository</li>
+<li>Create your feature branch (<code>git checkout -b feature/AmazingFeature</code>)</li>
+<li>Commit your changes (<code>git commit -m 'Add some AmazingFeature'</code>)</li>
+<li>Push to the branch (<code>git push origin feature/AmazingFeature</code>)</li>
+<li>Open a Pull Request</li>
+</ol>
+</section>
+<section id="license" class="level2">
+<h2 class="anchored" data-anchor-id="license">📝 License</h2>
+<p>MIT</p>
+</section>
+<section id="acknowledgments" class="level2">
+<h2 class="anchored" data-anchor-id="acknowledgments">🙏 Acknowledgments</h2>
+<ul>
+<li><a href="https://developer.spotify.com/documentation/web-api/">Spotify Web API</a></li>
+<li><a href="https://musicbrainz.org/">MusicBrainz</a> for open music metadata</li>
+<li><a href="https://developers.google.com/youtube/v3">YouTube Data API</a></li>
+<li><a href="https://docs.genius.com/">Genius API</a> for lyrics and credits</li>
+<li><a href="https://fastapi.tiangolo.com/">FastAPI</a> for the excellent framework</li>
+</ul>
+</section>
+<section id="support" class="level2">
+<h2 class="anchored" data-anchor-id="support">📞 Support</h2>
+<p>For support, email <a href="ces@precise.digital">ces@precise.digital</a></p>
+<hr>
+<p><strong>PRISM Analytics Engine</strong> - Transforming Music Data into Actionable Intelligence</p>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>
