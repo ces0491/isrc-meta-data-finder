@@ -1,7 +1,6 @@
 # type: ignore
 """
-PRISM Analytics - Simple Async Metadata Collector
-Focus on working functionality
+Async Metadata Collector
 """
 
 import asyncio

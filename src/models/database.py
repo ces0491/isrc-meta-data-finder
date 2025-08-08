@@ -161,7 +161,7 @@ class DatabaseManager:
             # Fallback to SQLite for local development
             db_dir = os.path.join(os.path.dirname(__file__), "../../data")
             os.makedirs(db_dir, exist_ok=True)
-            db_path = os.path.join(db_dir, "prism_analytics.db")
+            db_path = os.path.join(db_dir, "isrc_meta_data.db")
             database_url = f"sqlite:///{db_path}"
             logger.info(f"💾 Using SQLite database (development): {db_path}")
             

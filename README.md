@@ -150,12 +150,12 @@ curl -X POST "http://localhost:5000/api/analyze-enhanced" \
 # CSV Export
 
 curl "http://localhost:5000/api/bulk-csv?isrcs=USRC17607839,GBUM71505080" \
-  --output prism_export.csv
+  --output isrc_meta_data_export.csv
 
 # Excel Export (with formatting and summary)
 
 curl "http://localhost:5000/api/bulk-excel?isrcs=USRC17607839,GBUM71505080" \
-  --output prism_export.xlsx
+  --output isrc_meta_data_export.xlsx
 
 ```text
 
@@ -170,7 +170,7 @@ curl "http://localhost:5000/api/search?q=Beatles&type=artist&limit=10"
 ## 🏗️ Project Structure
 
 ```text
-prism-analytics/
+isrc-meta-data-finder/
 ├── run.py                  # Main application entry point
 ├── setup.py                # Automated setup script
 ├── requirements.txt        # Python dependencies
@@ -199,7 +199,7 @@ prism-analytics/
 │       └── app.js          # Frontend functionality
 │
 └── data/
-    ├── prism_analytics.db  # SQLite database
+    ├── isrc_meta_data.db   # SQLite database
     ├── cache/              # API response cache
     └── exports/            # Generated export files
 
@@ -242,7 +242,7 @@ SECRET_KEY=your-secret-key-here
 
 # Database (optional - defaults to SQLite)
 
-DATABASE_URL=postgresql://user:pass@localhost/prism
+DATABASE_URL=postgresql://user:pass@localhost/isrc_meta_data
 
 # Cache Settings
 
@@ -262,7 +262,7 @@ MUSICBRAINZ_RATE_LIMIT=50
 
 - No configuration needed
 - Perfect for development and small deployments
-- Database file: `data/prism_analytics.db`
+- Database file: `data/isrc_meta_data.db`
 
 **PostgreSQL** (Production):
 
@@ -274,7 +274,7 @@ pip install psycopg2-binary
 
 # Set in .env
 
-DATABASE_URL=postgresql://user:password@localhost:5432/prism_analytics
+DATABASE_URL=postgresql://user:password@localhost:5432/isrc_meta_data
 
 ```
 
@@ -337,7 +337,7 @@ Full API documentation available at: [http://localhost:5000/api/docs]
 
 # Ensure you're in the project root
 
-cd prism-analytics
+cd isrc-meta-data-finder
 
 # Reinstall dependencies
 
@@ -364,7 +364,7 @@ SPOTIFY_CLIENT_ID="abc123"  # ❌ Wrong
 
 # Delete and recreate database
 
-rm data/prism_analytics.db
+rm data/isrc_meta_data.db
 python run.py  # Will auto-create new database
 
 ```
@@ -427,4 +427,4 @@ MIT
 
 ---
 
-**PRISM Analytics Engine** - Transforming Music Data into Actionable Intelligence
+**Part of the PRISM Analytics Engine** - Transforming Music Data into Actionable Intelligence

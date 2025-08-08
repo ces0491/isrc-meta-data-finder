@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# PRISM Analytics - Deployment Helper Script
+# ISRC Meta Data Finder - Deployment Helper Script
 # This script prepares your project for Render deployment
 
-echo "🎵 PRISM Analytics - Deployment Preparation"
+echo "🎵 ISRC Meta Data Finder - Deployment Preparation"
 echo "=========================================="
 
 # Color codes for output
@@ -158,7 +158,7 @@ if [ "$READY" = true ]; then
     echo "   git commit -m 'Prepare for Render deployment'"
     echo ""
     echo "2. Push to GitHub:"
-    echo "   git remote add origin https://github.com/YOUR_USERNAME/prism-analytics.git"
+    echo "   git remote add origin https://github.com/ces0491/isrc-meta-data-finder.git"
     echo "   git push -u origin main"
     echo ""
     echo "3. Deploy on Render:"

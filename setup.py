@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-PRISM Analytics - Complete Setup and Testing Script
+ISRC metadata finder - Complete Setup and Testing Script
 This script will help you set up and test your metadata aggregation microservice
 """
 
@@ -137,7 +137,7 @@ def setup_environment():
         # Create .env from scratch
         print_info("Creating new .env file")
         
-        env_content = """# PRISM Analytics - Environment Configuration
+        env_content = """# ISRC metadata finder - Environment Configuration
 
 # Spotify API (Required for audio features)
 # Get from: https://developer.spotify.com/dashboard
@@ -164,7 +164,7 @@ HOST=127.0.0.1
 PORT=5000
 
 # Database (Optional - defaults to SQLite)
-# DATABASE_URL=postgresql://user:password@localhost/prism_analytics
+# DATABASE_URL=postgresql://user:password@localhost/isrc_meta_data_analyser
 """
         
         env_path.write_text(env_content)
@@ -367,7 +367,7 @@ def run_sample_analysis():
 
 def start_server():
     """Start the FastAPI server"""
-    print_header("Starting PRISM Analytics Server")
+    print_header("Starting ISRC Meta Data Finder Server")
     
     print_info("Server starting at: http://localhost:5000")
     print_info("API Documentation: http://localhost:5000/api/docs")
@@ -392,7 +392,7 @@ def start_server():
 
 def main():
     """Main setup and testing flow"""
-    print_header("PRISM Analytics Setup & Testing")
+    print_header("ISRC Meta Data Finder Setup & Testing")
     
     # 1. Check Python version
     if not check_python_version():

@@ -1,7 +1,6 @@
 """
-PRISM Analytics - API Routes
+ISRC Meta Data Finder - API Routes
 RESTful API endpoints for metadata analysis
-Python 3.11+ with modern typing and Pydantic v2
 """
 
 from fastapi import APIRouter, HTTPException, Query, UploadFile, File, BackgroundTasks, Request, Depends
@@ -288,7 +287,7 @@ async def export_metadata(
             content=content,
             media_type="text/csv",
             headers={
-                "Content-Disposition": f"attachment; filename=prism_export_{datetime.now().strftime('%Y%m%d')}.csv"
+                "Content-Disposition": f"attachment; filename=isrc_meta_data_export_{datetime.now().strftime('%Y%m%d')}.csv"
             }
         )
     
@@ -298,7 +297,7 @@ async def export_metadata(
             excel_file,
             media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             headers={
-                "Content-Disposition": f"attachment; filename=prism_export_{datetime.now().strftime('%Y%m%d')}.xlsx"
+                "Content-Disposition": f"attachment; filename=isrc_meta_data_export_{datetime.now().strftime('%Y%m%d')}.xlsx"
             }
         )
     
@@ -307,7 +306,7 @@ async def export_metadata(
             content=json.dumps(metadata_list, indent=2),
             media_type="application/json",
             headers={
-                "Content-Disposition": f"attachment; filename=prism_export_{datetime.now().strftime('%Y%m%d')}.json"
+                "Content-Disposition": f"attachment; filename=isrc_meta_data_export_{datetime.now().strftime('%Y%m%d')}.json"
             }
         )
     
@@ -459,7 +458,7 @@ async def get_statistics(app_state: dict[str, Any] = Depends(get_app_state)):
         
         # Database size (approximate)
         import os
-        db_path = "data/prism_analytics.db"
+        db_path = "data/isrc_meta_data.db"
         db_size_mb = os.path.getsize(db_path) / (1024 * 1024) if os.path.exists(db_path) else 0
         
         return StatsResponse(

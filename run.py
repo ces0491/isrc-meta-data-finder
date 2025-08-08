@@ -2,9 +2,8 @@
 
 #!/usr/bin/env python3
 """
-PRISM Analytics - Enhanced Metadata Intelligence System
-Main Application Entry Point - Reconciled Version
-Incorporates all features from main.py including enhanced Excel export
+PRISM Analytics - Music Metadata Intelligence System
+Main Application Entry Point
 """
 
 import os
@@ -69,7 +68,7 @@ logger = logging.getLogger(__name__)
 class DatabaseManager:
     """SQLite database manager for metadata storage - Complete Implementation"""
     
-    def __init__(self, db_path: str = "data/prism_metadata.db"):
+    def __init__(self, db_path: str = "data/isrc_metadata.db"):
         self.db_path = Path(db_path)
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self.create_tables()
@@ -655,7 +654,7 @@ class ExportService:
         output = io.StringIO()
         
         # Add metadata header
-        output.write("# PRISM Analytics - Metadata Export\n")
+        output.write("# ISRC Metadata Export\n")
         output.write(f"# Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
         output.write(f"# Total Records: {len(metadata_list)}\n")
         output.write("#\n")
@@ -751,7 +750,7 @@ class ExportService:
         worksheet = workbook.add_worksheet('Track Metadata')
         
         # Add PRISM branding header
-        worksheet.merge_range(0, 0, 0, 21, 'PRISM Analytics - Metadata Export', title_format)
+        worksheet.merge_range(0, 0, 0, 21, 'ISRC Metadata Export', title_format)
         worksheet.merge_range(1, 0, 1, 21, f'Generated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}', subtitle_format)
         worksheet.merge_range(2, 0, 2, 21, f'Total Records: {len(metadata_list)}', subtitle_format)
         
@@ -839,7 +838,7 @@ class ExportService:
         summary_sheet = workbook.add_worksheet('Summary')
         
         # Summary branding
-        summary_sheet.merge_range(0, 0, 0, 1, 'PRISM Analytics Summary', title_format)
+        summary_sheet.merge_range(0, 0, 0, 1, 'Summary', title_format)
         summary_sheet.merge_range(1, 0, 1, 1, f'Analysis Date: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}', subtitle_format)
         
         # Summary headers
@@ -926,8 +925,8 @@ def create_app() -> FastAPI:
     """Create and configure FastAPI application"""
     
     app = FastAPI(
-        title="PRISM Analytics Engine",
-        description="Metadata Intelligence Component - Reconciled Version",
+        title="ISRC Meta Data Finder",
+        description="Music Metadata Intelligence",
         version="2.1.0",
         docs_url="/api/docs",
         redoc_url="/api/redoc"
@@ -996,7 +995,7 @@ async def health_check():
     
     return {
         "status": "healthy",
-        "service": "PRISM Analytics Engine",
+        "service": "ISRC Meta Data Finder",
         "version": "2.1.0",
         "timestamp": datetime.now().isoformat(),
         "database": db_stats,
@@ -1092,7 +1091,7 @@ async def bulk_csv_export(isrcs: str = Query(..., description="Comma-separated I
     return Response(
         content=csv_content,
         media_type="text/csv",
-        headers={"Content-Disposition": f"attachment; filename=prism_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"}
+        headers={"Content-Disposition": f"attachment; filename=isrc_meta_data_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"}
     )
 
 @app.get("/api/bulk-excel")
@@ -1131,7 +1130,7 @@ async def bulk_excel_export(isrcs: str = Query(..., description="Comma-separated
     return StreamingResponse(
         excel_file,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": f"attachment; filename=prism_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"}
+        headers={"Content-Disposition": f"attachment; filename=isrc_meta_data_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"}
     )
 
 @app.post("/api/bulk-analyze")

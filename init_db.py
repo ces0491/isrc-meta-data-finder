@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Database initialization script for PRISM Analytics
+Database initialization script for ISRC Meta Data Finder
 Run this after deployment to initialize database tables
 """
 

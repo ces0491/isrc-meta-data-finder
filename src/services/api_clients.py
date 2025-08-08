@@ -1,6 +1,6 @@
 """
-PRISM Analytics - Complete API Clients
-All API integrations with proper error handling and rate limiting
+ISRC Meta Data Finder - API Clients
+
 """
 
 import base64
