@@ -1,9 +1,10 @@
 """
 ISRC Meta Data Finder - API Clients
-
+Complete implementation with Last.fm and Discogs
 """
 
 import base64
+import hashlib
 import logging
 import time
 import requests
@@ -11,6 +12,7 @@ import asyncio
 from datetime import datetime, timedelta
 from threading import Lock
 from typing import Dict, Optional, List, Any
+from urllib.parse import quote
 
 logger = logging.getLogger(__name__)
 
@@ -373,7 +375,7 @@ class GeniusClient:
 
 
 class LastFmClient:
-    """Last.fm API client (placeholder for future implementation)"""
+    """Last.fm API client for music metadata and social listening data"""
     
     def __init__(self, api_key: str, shared_secret: str):
         self.api_key = api_key
@@ -381,14 +383,177 @@ class LastFmClient:
         self.base_url = "http://ws.audioscrobbler.com/2.0/"
         self.rate_limiter = RateLimiter(60)
     
-    def search_track(self, title: str, artist: str) -> Optional[Dict]:
-        """Search for track on Last.fm"""
-        # Placeholder for future implementation
+    def _make_request(self, params: Dict[str, Any]) -> Optional[Dict]:
+        """Make a request to Last.fm API"""
+        self.rate_limiter.wait_if_needed()
+        
+        # Add API key and format to all requests
+        params['api_key'] = self.api_key
+        params['format'] = 'json'
+        
+        try:
+            response = requests.get(
+                self.base_url,
+                params=params,
+                timeout=10
+            )
+            
+            if response.status_code == 429:
+                logger.warning("Last.fm rate limited, waiting 60 seconds")
+                time.sleep(60)
+                return self._make_request(params)
+            
+            if response.status_code != 200:
+                logger.error(f"Last.fm API error: {response.status_code} - {response.text}")
+                return None
+            
+            data = response.json()
+            
+            if 'error' in data:
+                logger.error(f"Last.fm API error: {data.get('message', 'Unknown error')}")
+                return None
+            
+            return data
+            
+        except Exception as e:
+            logger.error(f"Last.fm request failed: {e}")
+            return None
+    
+    def search_track(self, title: str, artist: str, limit: int = 5) -> Optional[Dict]:
+        """Search for a track on Last.fm"""
+        params = {
+            'method': 'track.search',
+            'track': title,
+            'artist': artist,
+            'limit': limit
+        }
+        
+        result = self._make_request(params)
+        
+        if result and 'results' in result:
+            tracks = result['results'].get('trackmatches', {}).get('track', [])
+            if tracks:
+                if isinstance(tracks, list) and len(tracks) > 0:
+                    return tracks[0]
+                elif isinstance(tracks, dict):
+                    return tracks
+        
+        return None
+    
+    def get_track_info(self, artist: str, track: str, username: Optional[str] = None) -> Optional[Dict]:
+        """Get detailed track information including play count and listeners"""
+        params = {
+            'method': 'track.getInfo',
+            'artist': artist,
+            'track': track,
+            'autocorrect': '1'
+        }
+        
+        if username:
+            params['username'] = username
+        
+        result = self._make_request(params)
+        
+        if result and 'track' in result:
+            return result['track']
+        
+        return None
+    
+    def get_track_tags(self, artist: str, track: str) -> Optional[List[Dict]]:
+        """Get top tags for a track"""
+        params = {
+            'method': 'track.getTopTags',
+            'artist': artist,
+            'track': track,
+            'autocorrect': '1'
+        }
+        
+        result = self._make_request(params)
+        
+        if result and 'toptags' in result:
+            return result['toptags'].get('tag', [])
+        
+        return None
+    
+    def get_similar_tracks(self, artist: str, track: str, limit: int = 10) -> Optional[List[Dict]]:
+        """Get similar tracks"""
+        params = {
+            'method': 'track.getSimilar',
+            'artist': artist,
+            'track': track,
+            'limit': limit,
+            'autocorrect': '1'
+        }
+        
+        result = self._make_request(params)
+        
+        if result and 'similartracks' in result:
+            return result['similartracks'].get('track', [])
+        
+        return None
+    
+    def get_artist_info(self, artist: str) -> Optional[Dict]:
+        """Get detailed artist information"""
+        params = {
+            'method': 'artist.getInfo',
+            'artist': artist,
+            'autocorrect': '1'
+        }
+        
+        result = self._make_request(params)
+        
+        if result and 'artist' in result:
+            return result['artist']
+        
+        return None
+    
+    def get_album_info(self, artist: str, album: str) -> Optional[Dict]:
+        """Get detailed album information"""
+        params = {
+            'method': 'album.getInfo',
+            'artist': artist,
+            'album': album,
+            'autocorrect': '1'
+        }
+        
+        result = self._make_request(params)
+        
+        if result and 'album' in result:
+            return result['album']
+        
+        return None
+    
+    def search_by_mbid(self, mbid: str) -> Optional[Dict]:
+        """Search for a track by MusicBrainz ID"""
+        params = {
+            'method': 'track.getInfo',
+            'mbid': mbid
+        }
+        
+        result = self._make_request(params)
+        
+        if result and 'track' in result:
+            return result['track']
+        
+        return None
+    
+    def get_chart_top_tracks(self, limit: int = 50) -> Optional[List[Dict]]:
+        """Get top tracks chart"""
+        params = {
+            'method': 'chart.getTopTracks',
+            'limit': limit
+        }
+        
+        result = self._make_request(params)
+        
+        if result and 'tracks' in result:
+            return result['tracks'].get('track', [])
+        
         return None
 
 
 class DiscogsClient:
-    """Discogs API client (placeholder for future implementation)"""
+    """Discogs API client for detailed release and label information"""
     
     def __init__(self, user_token: str):
         self.user_token = user_token
@@ -399,10 +564,195 @@ class DiscogsClient:
             "User-Agent": "PRISM-Analytics/2.0"
         }
     
-    def search_release(self, title: str, artist: str) -> Optional[Dict]:
-        """Search for release on Discogs"""
-        # Placeholder for future implementation
+    def _make_request(self, endpoint: str, params: Optional[Dict] = None) -> Optional[Dict]:
+        """Make a request to Discogs API"""
+        self.rate_limiter.wait_if_needed()
+        
+        url = f"{self.base_url}{endpoint}"
+        
+        try:
+            response = requests.get(
+                url,
+                headers=self.headers,
+                params=params,
+                timeout=15
+            )
+            
+            remaining = response.headers.get('X-Discogs-Ratelimit-Remaining')
+            if remaining and int(remaining) < 5:
+                logger.warning(f"Discogs rate limit low: {remaining} requests remaining")
+                time.sleep(1)
+            
+            if response.status_code == 429:
+                logger.warning("Discogs rate limited, waiting 60 seconds")
+                time.sleep(60)
+                return self._make_request(endpoint, params)
+            
+            if response.status_code == 404:
+                return None
+            
+            if response.status_code != 200:
+                logger.error(f"Discogs API error: {response.status_code} - {response.text}")
+                return None
+            
+            return response.json()
+            
+        except Exception as e:
+            logger.error(f"Discogs request failed: {e}")
+            return None
+    
+    def search_release(self, title: str, artist: str, type: str = "release") -> Optional[Dict]:
+        """Search for a release on Discogs"""
+        params = {
+            'title': title,
+            'artist': artist,
+            'type': type,
+            'per_page': 10
+        }
+        
+        result = self._make_request("/database/search", params)
+        
+        if result and 'results' in result and result['results']:
+            return result['results'][0]
+        
         return None
+    
+    def search_by_barcode(self, barcode: str) -> Optional[Dict]:
+        """Search for a release by barcode/UPC"""
+        params = {
+            'barcode': barcode,
+            'type': 'release',
+            'per_page': 10
+        }
+        
+        result = self._make_request("/database/search", params)
+        
+        if result and 'results' in result and result['results']:
+            return result['results'][0]
+        
+        return None
+    
+    def search_by_catno(self, catalog_number: str, label: Optional[str] = None) -> Optional[Dict]:
+        """Search for a release by catalog number"""
+        params = {
+            'catno': catalog_number,
+            'type': 'release',
+            'per_page': 10
+        }
+        
+        if label:
+            params['label'] = label
+        
+        result = self._make_request("/database/search", params)
+        
+        if result and 'results' in result and result['results']:
+            return result['results'][0]
+        
+        return None
+    
+    def get_release(self, release_id: int) -> Optional[Dict]:
+        """Get detailed release information"""
+        return self._make_request(f"/releases/{release_id}")
+    
+    def get_master_release(self, master_id: int) -> Optional[Dict]:
+        """Get master release information"""
+        return self._make_request(f"/masters/{master_id}")
+    
+    def get_release_versions(self, master_id: int) -> Optional[List[Dict]]:
+        """Get all versions of a master release"""
+        result = self._make_request(f"/masters/{master_id}/versions")
+        
+        if result and 'versions' in result:
+            return result['versions']
+        
+        return None
+    
+    def get_artist(self, artist_id: int) -> Optional[Dict]:
+        """Get detailed artist information"""
+        return self._make_request(f"/artists/{artist_id}")
+    
+    def get_artist_releases(self, artist_id: int, page: int = 1, per_page: int = 50) -> Optional[List[Dict]]:
+        """Get all releases by an artist"""
+        params = {
+            'page': page,
+            'per_page': per_page,
+            'sort': 'year',
+            'sort_order': 'desc'
+        }
+        
+        result = self._make_request(f"/artists/{artist_id}/releases", params)
+        
+        if result and 'releases' in result:
+            return result['releases']
+        
+        return None
+    
+    def get_label(self, label_id: int) -> Optional[Dict]:
+        """Get detailed label information"""
+        return self._make_request(f"/labels/{label_id}")
+    
+    def get_label_releases(self, label_id: int, page: int = 1, per_page: int = 50) -> Optional[List[Dict]]:
+        """Get all releases from a label"""
+        params = {
+            'page': page,
+            'per_page': per_page
+        }
+        
+        result = self._make_request(f"/labels/{label_id}/releases", params)
+        
+        if result and 'releases' in result:
+            return result['releases']
+        
+        return None
+    
+    def extract_credits_from_release(self, release_data: Dict) -> List[Dict]:
+        """Extract and format credits from a release"""
+        credits = []
+        
+        # Extract artists
+        if 'artists' in release_data:
+            for artist in release_data['artists']:
+                credits.append({
+                    'name': artist.get('name', ''),
+                    'credit_type': 'main_artist',
+                    'source': 'discogs',
+                    'source_confidence': 0.9
+                })
+        
+        # Extract extra artists
+        if 'extraartists' in release_data:
+            for artist in release_data['extraartists']:
+                credits.append({
+                    'name': artist.get('name', ''),
+                    'credit_type': artist.get('role', 'contributor').lower().replace(' ', '_'),
+                    'role_details': artist.get('role', ''),
+                    'source': 'discogs',
+                    'source_confidence': 0.85
+                })
+        
+        # Extract track-level credits
+        if 'tracklist' in release_data:
+            for track in release_data['tracklist']:
+                if 'extraartists' in track:
+                    for artist in track['extraartists']:
+                        credits.append({
+                            'name': artist.get('name', ''),
+                            'credit_type': f"track_{artist.get('role', 'contributor').lower().replace(' ', '_')}",
+                            'role_details': f"{artist.get('role', '')} on {track.get('title', 'track')}",
+                            'source': 'discogs',
+                            'source_confidence': 0.8
+                        })
+        
+        # Remove duplicates
+        seen = set()
+        unique_credits = []
+        for credit in credits:
+            credit_key = f"{credit['name']}_{credit['credit_type']}"
+            if credit_key not in seen:
+                seen.add(credit_key)
+                unique_credits.append(credit)
+        
+        return unique_credits
 
 
 class APIClientManager:
@@ -469,9 +819,11 @@ class APIClientManager:
                 logger.error(f"Failed to initialize Last.fm: {e}")
         
         # Discogs
-        if self.config.get("DISCOGS_USER_TOKEN"):
+        if self.config.get("DISCOGS_API_KEY") or self.config.get("DISCOGS_USER_TOKEN"):
             try:
-                self.discogs = DiscogsClient(self.config["DISCOGS_USER_TOKEN"])
+                # Support both DISCOGS_API_KEY and DISCOGS_USER_TOKEN for compatibility
+                token = self.config.get("DISCOGS_USER_TOKEN") or self.config.get("DISCOGS_API_KEY")
+                self.discogs = DiscogsClient(token)
                 logger.info("✅ Discogs client initialized")
             except Exception as e:
                 logger.error(f"Failed to initialize Discogs: {e}")
