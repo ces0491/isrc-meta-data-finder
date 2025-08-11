@@ -1,6 +1,6 @@
 """
 ISRC Meta Data Finder - API Clients
-Complete implementation with Last.fm and Discogs
+Complete implementation with modern Python 3.11 type hints
 """
 
 import base64
@@ -11,7 +11,7 @@ import requests
 import asyncio
 from datetime import datetime, timedelta
 from threading import Lock
-from typing import Dict, Optional, List, Any
+from typing import Any
 from urllib.parse import quote
 
 logger = logging.getLogger(__name__)
@@ -22,10 +22,10 @@ class RateLimiter:
     
     def __init__(self, requests_per_minute: int):
         self.requests_per_minute = requests_per_minute
-        self.request_times = []
+        self.request_times: list[float] = []
         self.lock = Lock()
     
-    def wait_if_needed(self):
+    def wait_if_needed(self) -> None:
         """Wait if rate limit would be exceeded"""
         with self.lock:
             now = time.time()
@@ -48,8 +48,8 @@ class SpotifyClient:
     def __init__(self, client_id: str, client_secret: str):
         self.client_id = client_id
         self.client_secret = client_secret
-        self.access_token = None
-        self.token_expires = None
+        self.access_token: str | None = None
+        self.token_expires: datetime | None = None
         self.rate_limiter = RateLimiter(100)  # Spotify allows ~180 req/min
         self.base_url = "https://api.spotify.com/v1"
     
@@ -83,18 +83,19 @@ class SpotifyClient:
                 raise Exception(f"Spotify auth failed: {response.status_code}")
             
             token_data = response.json()
-            self.access_token = token_data["access_token"]
+            access_token = token_data["access_token"]  # Store in a local variable
+            self.access_token = access_token           # Assign to the instance
             expires_in = token_data.get("expires_in", 3600)
             self.token_expires = datetime.now() + timedelta(seconds=expires_in - 60)
-            
+
             logger.info("✅ Spotify token obtained successfully")
-            return self.access_token
+            return access_token # Return the local variable
             
         except Exception as e:
             logger.error(f"Failed to get Spotify token: {e}")
             raise
     
-    def _make_request(self, endpoint: str, params: Optional[Dict] = None) -> Optional[Dict]:
+    def _make_request(self, endpoint: str, params: dict[str, Any] | None = None) -> dict[str, Any] | None:
         """Make authenticated API request"""
         self.rate_limiter.wait_if_needed()
         
@@ -128,7 +129,7 @@ class SpotifyClient:
             logger.error(f"Spotify request failed: {e}")
             return None
     
-    def search_by_isrc(self, isrc: str) -> Optional[Dict]:
+    def search_by_isrc(self, isrc: str) -> dict[str, Any] | None:
         """Search for track by ISRC"""
         params = {
             "q": f"isrc:{isrc}",
@@ -143,11 +144,11 @@ class SpotifyClient:
         
         return None
     
-    def get_audio_features(self, track_id: str) -> Optional[Dict]:
+    def get_audio_features(self, track_id: str) -> dict[str, Any] | None:
         """Get audio features for a track"""
         return self._make_request(f"/audio-features/{track_id}")
     
-    def get_track(self, track_id: str) -> Optional[Dict]:
+    def get_track(self, track_id: str) -> dict[str, Any] | None:
         """Get detailed track information"""
         return self._make_request(f"/tracks/{track_id}")
 
@@ -160,8 +161,8 @@ class YouTubeClient:
         self.base_url = "https://www.googleapis.com/youtube/v3"
         self.rate_limiter = RateLimiter(100)  # Conservative rate limiting
     
-    def search_by_isrc(self, isrc: str, track_title: Optional[str] = None, 
-                      artist: Optional[str] = None) -> Optional[Dict]:
+    def search_by_isrc(self, isrc: str, track_title: str | None = None, 
+                      artist: str | None = None) -> dict[str, Any] | None:
         """Search for music video by ISRC"""
         self.rate_limiter.wait_if_needed()
         
@@ -209,7 +210,7 @@ class YouTubeClient:
             logger.error(f"YouTube search error: {e}")
             return None
     
-    def _get_video_details(self, video_id: str) -> Optional[Dict]:
+    def _get_video_details(self, video_id: str) -> dict[str, Any] | None:
         """Get detailed video information including statistics"""
         self.rate_limiter.wait_if_needed()
         
@@ -244,7 +245,7 @@ class MusicBrainzClient:
             "User-Agent": "PRISM-Analytics/2.0 (https://precise.digital)"
         }
     
-    def search_recording_by_isrc(self, isrc: str) -> Optional[Dict]:
+    def search_recording_by_isrc(self, isrc: str) -> dict[str, Any] | None:
         """Search for recording by ISRC"""
         self.rate_limiter.wait_if_needed()
         
@@ -282,7 +283,7 @@ class MusicBrainzClient:
             logger.error(f"MusicBrainz request error: {e}")
             return None
     
-    def get_recording(self, recording_id: str) -> Optional[Dict]:
+    def get_recording(self, recording_id: str) -> dict[str, Any] | None:
         """Get detailed recording information"""
         self.rate_limiter.wait_if_needed()
         
@@ -320,7 +321,7 @@ class GeniusClient:
             "Authorization": f"Bearer {api_key}"
         }
     
-    def search_song(self, title: str, artist: str) -> Optional[Dict]:
+    def search_song(self, title: str, artist: str) -> dict[str, Any] | None:
         """Search for a song on Genius"""
         self.rate_limiter.wait_if_needed()
         
@@ -353,7 +354,7 @@ class GeniusClient:
             logger.error(f"Genius search error: {e}")
             return None
     
-    def get_song_details(self, song_id: int) -> Optional[Dict]:
+    def get_song_details(self, song_id: int) -> dict[str, Any] | None:
         """Get detailed song information including credits"""
         self.rate_limiter.wait_if_needed()
         
@@ -383,7 +384,7 @@ class LastFmClient:
         self.base_url = "http://ws.audioscrobbler.com/2.0/"
         self.rate_limiter = RateLimiter(60)
     
-    def _make_request(self, params: Dict[str, Any]) -> Optional[Dict]:
+    def _make_request(self, params: dict[str, Any]) -> dict[str, Any] | None:
         """Make a request to Last.fm API"""
         self.rate_limiter.wait_if_needed()
         
@@ -419,7 +420,7 @@ class LastFmClient:
             logger.error(f"Last.fm request failed: {e}")
             return None
     
-    def search_track(self, title: str, artist: str, limit: int = 5) -> Optional[Dict]:
+    def search_track(self, title: str, artist: str, limit: int = 5) -> dict[str, Any] | None:
         """Search for a track on Last.fm"""
         params = {
             'method': 'track.search',
@@ -440,7 +441,7 @@ class LastFmClient:
         
         return None
     
-    def get_track_info(self, artist: str, track: str, username: Optional[str] = None) -> Optional[Dict]:
+    def get_track_info(self, artist: str, track: str, username: str | None = None) -> dict[str, Any] | None:
         """Get detailed track information including play count and listeners"""
         params = {
             'method': 'track.getInfo',
@@ -459,7 +460,7 @@ class LastFmClient:
         
         return None
     
-    def get_track_tags(self, artist: str, track: str) -> Optional[List[Dict]]:
+    def get_track_tags(self, artist: str, track: str) -> list[dict[str, Any]] | None:
         """Get top tags for a track"""
         params = {
             'method': 'track.getTopTags',
@@ -475,7 +476,7 @@ class LastFmClient:
         
         return None
     
-    def get_similar_tracks(self, artist: str, track: str, limit: int = 10) -> Optional[List[Dict]]:
+    def get_similar_tracks(self, artist: str, track: str, limit: int = 10) -> list[dict[str, Any]] | None:
         """Get similar tracks"""
         params = {
             'method': 'track.getSimilar',
@@ -492,7 +493,7 @@ class LastFmClient:
         
         return None
     
-    def get_artist_info(self, artist: str) -> Optional[Dict]:
+    def get_artist_info(self, artist: str) -> dict[str, Any] | None:
         """Get detailed artist information"""
         params = {
             'method': 'artist.getInfo',
@@ -507,7 +508,7 @@ class LastFmClient:
         
         return None
     
-    def get_album_info(self, artist: str, album: str) -> Optional[Dict]:
+    def get_album_info(self, artist: str, album: str) -> dict[str, Any] | None:
         """Get detailed album information"""
         params = {
             'method': 'album.getInfo',
@@ -523,7 +524,7 @@ class LastFmClient:
         
         return None
     
-    def search_by_mbid(self, mbid: str) -> Optional[Dict]:
+    def search_by_mbid(self, mbid: str) -> dict[str, Any] | None:
         """Search for a track by MusicBrainz ID"""
         params = {
             'method': 'track.getInfo',
@@ -537,7 +538,7 @@ class LastFmClient:
         
         return None
     
-    def get_chart_top_tracks(self, limit: int = 50) -> Optional[List[Dict]]:
+    def get_chart_top_tracks(self, limit: int = 50) -> list[dict[str, Any]] | None:
         """Get top tracks chart"""
         params = {
             'method': 'chart.getTopTracks',
@@ -564,7 +565,7 @@ class DiscogsClient:
             "User-Agent": "PRISM-Analytics/2.0"
         }
     
-    def _make_request(self, endpoint: str, params: Optional[Dict] = None) -> Optional[Dict]:
+    def _make_request(self, endpoint: str, params: dict[str, Any] | None = None) -> dict[str, Any] | None:
         """Make a request to Discogs API"""
         self.rate_limiter.wait_if_needed()
         
@@ -601,7 +602,7 @@ class DiscogsClient:
             logger.error(f"Discogs request failed: {e}")
             return None
     
-    def search_release(self, title: str, artist: str, type: str = "release") -> Optional[Dict]:
+    def search_release(self, title: str, artist: str, type: str = "release") -> dict[str, Any] | None:
         """Search for a release on Discogs"""
         params = {
             'title': title,
@@ -617,7 +618,7 @@ class DiscogsClient:
         
         return None
     
-    def search_by_barcode(self, barcode: str) -> Optional[Dict]:
+    def search_by_barcode(self, barcode: str) -> dict[str, Any] | None:
         """Search for a release by barcode/UPC"""
         params = {
             'barcode': barcode,
@@ -632,7 +633,7 @@ class DiscogsClient:
         
         return None
     
-    def search_by_catno(self, catalog_number: str, label: Optional[str] = None) -> Optional[Dict]:
+    def search_by_catno(self, catalog_number: str, label: str | None = None) -> dict[str, Any] | None:
         """Search for a release by catalog number"""
         params = {
             'catno': catalog_number,
@@ -650,15 +651,15 @@ class DiscogsClient:
         
         return None
     
-    def get_release(self, release_id: int) -> Optional[Dict]:
+    def get_release(self, release_id: int) -> dict[str, Any] | None:
         """Get detailed release information"""
         return self._make_request(f"/releases/{release_id}")
     
-    def get_master_release(self, master_id: int) -> Optional[Dict]:
+    def get_master_release(self, master_id: int) -> dict[str, Any] | None:
         """Get master release information"""
         return self._make_request(f"/masters/{master_id}")
     
-    def get_release_versions(self, master_id: int) -> Optional[List[Dict]]:
+    def get_release_versions(self, master_id: int) -> list[dict[str, Any]] | None:
         """Get all versions of a master release"""
         result = self._make_request(f"/masters/{master_id}/versions")
         
@@ -667,11 +668,11 @@ class DiscogsClient:
         
         return None
     
-    def get_artist(self, artist_id: int) -> Optional[Dict]:
+    def get_artist(self, artist_id: int) -> dict[str, Any] | None:
         """Get detailed artist information"""
         return self._make_request(f"/artists/{artist_id}")
     
-    def get_artist_releases(self, artist_id: int, page: int = 1, per_page: int = 50) -> Optional[List[Dict]]:
+    def get_artist_releases(self, artist_id: int, page: int = 1, per_page: int = 50) -> list[dict[str, Any]] | None:
         """Get all releases by an artist"""
         params = {
             'page': page,
@@ -687,11 +688,11 @@ class DiscogsClient:
         
         return None
     
-    def get_label(self, label_id: int) -> Optional[Dict]:
+    def get_label(self, label_id: int) -> dict[str, Any] | None:
         """Get detailed label information"""
         return self._make_request(f"/labels/{label_id}")
     
-    def get_label_releases(self, label_id: int, page: int = 1, per_page: int = 50) -> Optional[List[Dict]]:
+    def get_label_releases(self, label_id: int, page: int = 1, per_page: int = 50) -> list[dict[str, Any]] | None:
         """Get all releases from a label"""
         params = {
             'page': page,
@@ -705,9 +706,9 @@ class DiscogsClient:
         
         return None
     
-    def extract_credits_from_release(self, release_data: Dict) -> List[Dict]:
+    def extract_credits_from_release(self, release_data: dict[str, Any]) -> list[dict[str, Any]]:
         """Extract and format credits from a release"""
-        credits = []
+        credits: list[dict[str, Any]] = []
         
         # Extract artists
         if 'artists' in release_data:
@@ -745,7 +746,7 @@ class DiscogsClient:
         
         # Remove duplicates
         seen = set()
-        unique_credits = []
+        unique_credits: list[dict[str, Any]] = []
         for credit in credits:
             credit_key = f"{credit['name']}_{credit['credit_type']}"
             if credit_key not in seen:
@@ -758,19 +759,19 @@ class DiscogsClient:
 class APIClientManager:
     """Centralized API client manager"""
     
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         self.config = config
-        self.spotify = None
-        self.youtube = None
-        self.musicbrainz = None
-        self.genius = None
-        self.lastfm = None
-        self.discogs = None
+        self.spotify: SpotifyClient | None = None
+        self.youtube: YouTubeClient | None = None
+        self.musicbrainz: MusicBrainzClient | None = None
+        self.genius: GeniusClient | None = None
+        self.lastfm: LastFmClient | None = None
+        self.discogs: DiscogsClient | None = None
         
         # Initialize clients based on available credentials
         self._initialize_clients()
     
-    def _initialize_clients(self):
+    def _initialize_clients(self) -> None:
         """Initialize all configured API clients"""
         
         # Spotify
@@ -818,17 +819,18 @@ class APIClientManager:
             except Exception as e:
                 logger.error(f"Failed to initialize Last.fm: {e}")
         
-        # Discogs
-        if self.config.get("DISCOGS_API_KEY") or self.config.get("DISCOGS_USER_TOKEN"):
+        # Discogs - Fixed initialization
+        discogs_token = self.config.get("DISCOGS_USER_TOKEN") or self.config.get("DISCOGS_API_KEY")
+        if discogs_token and isinstance(discogs_token, str):
             try:
-                # Support both DISCOGS_API_KEY and DISCOGS_USER_TOKEN for compatibility
-                token = self.config.get("DISCOGS_USER_TOKEN") or self.config.get("DISCOGS_API_KEY")
-                self.discogs = DiscogsClient(token)
+                self.discogs = DiscogsClient(discogs_token)
                 logger.info("✅ Discogs client initialized")
             except Exception as e:
                 logger.error(f"Failed to initialize Discogs: {e}")
+        else:
+            logger.info("Discogs client not configured (no valid token found)")
     
-    def validate_clients(self) -> Dict[str, str]:
+    def validate_clients(self) -> dict[str, str]:
         """Check which clients are available"""
         status = {}
         
@@ -842,12 +844,12 @@ class APIClientManager:
         
         return status
     
-    async def validate_clients_async(self) -> Dict[str, str]:
+    async def validate_clients_async(self) -> dict[str, str]:
         """Async version of validate_clients"""
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(None, self.validate_clients)
     
-    def get_available_clients(self) -> List[str]:
+    def get_available_clients(self) -> list[str]:
         """Get list of available client names"""
         available = []
         
