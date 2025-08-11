@@ -791,7 +791,7 @@
         <!-- API Status Bar -->
         <div class="api-status-bar">
             <span style="font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--pure-white);">
-                SYSTEM STATUS:
+                System Status:
                 <span class="tooltip-wrapper">
                     <span class="info-icon">?</span>
                     <span class="tooltip">Real-time status of integrated metadata sources</span>
@@ -872,13 +872,13 @@
             <div class="status-card">
                 <div class="status-icon">📝</div>
                 <div class="status-title">
-                    With Lyrics
+                    With Credits
                     <span class="tooltip-wrapper">
                         <span class="info-icon">i</span>
-                        <span class="tooltip">Tracks with lyrics and songwriter credits</span>
+                        <span class="tooltip">Tracks with complete songwriter and producer credits</span>
                     </span>
                 </div>
-                <div class="status-value" id="with-lyrics">0</div>
+                <div class="status-value" id="with-credits">0</div>
             </div>
         </div>
 
@@ -1307,7 +1307,7 @@
                 
                 document.getElementById('spotify-coverage').textContent = spotifyCoverage + '%';
                 document.getElementById('youtube-coverage').textContent = youtubeCoverage + '%';
-                document.getElementById('with-lyrics').textContent = formatNumber(stats.tracks_with_lyrics || 0);
+                document.getElementById('with-credits').textContent = formatNumber(stats.tracks_with_credits || 0);
                 
             } catch (error) {
                 console.error('Failed to load stats:', error);
@@ -1374,7 +1374,7 @@
             window.lastAnalyzedISRC = data.isrc;
             window.lastAnalysisData = data;
             
-            // Build comprehensive metadata grid - now including credits but excluding IDs
+            // Build comprehensive metadata grid - prioritize credits and remove Mode
             let metadataHtml = '';
             const fields = [
                 // Basic Track Info
@@ -1388,21 +1388,22 @@
                 { label: 'Release Date', value: data.release_date },
                 { label: 'Release Year', value: data.release_year },
                 
-                // Music Features
-                { label: 'Tempo', value: data.tempo ? `${Math.round(data.tempo)} BPM` : 'N/A' },
-                { label: 'Key', value: data.key !== undefined ? data.key : 'N/A' },
-                { label: 'Mode', value: data.mode !== undefined ? (data.mode === 1 ? 'Major' : 'Minor') : 'N/A' },
-                { label: 'Time Signature', value: data.time_signature },
-                { label: 'Energy', value: data.energy ? `${Math.round(data.energy * 100)}%` : 'N/A' },
-                { label: 'Danceability', value: data.danceability ? `${Math.round(data.danceability * 100)}%` : 'N/A' },
-                { label: 'Valence', value: data.valence ? `${Math.round(data.valence * 100)}%` : 'N/A' },
-                
-                // Credits (prioritized)
+                // Credits (prioritized and expanded)
                 { label: 'Composers', value: data.composers && data.composers.length > 0 ? data.composers.join(', ') : 'N/A' },
+                { label: 'Lyricists', value: data.lyricists && data.lyricists.length > 0 ? data.lyricists.join(', ') : 'N/A' },
                 { label: 'Producers', value: data.producers && data.producers.length > 0 ? data.producers.join(', ') : 'N/A' },
                 { label: 'Writers', value: data.writers && data.writers.length > 0 ? data.writers.join(', ') : 'N/A' },
                 { label: 'Performers', value: data.performers && data.performers.length > 0 ? data.performers.join(', ') : 'N/A' },
                 { label: 'Engineers', value: data.engineers && data.engineers.length > 0 ? data.engineers.join(', ') : 'N/A' },
+                { label: 'Featured Artists', value: data.featured_artists && data.featured_artists.length > 0 ? data.featured_artists.join(', ') : 'N/A' },
+                
+                // Music Features (without Mode)
+                { label: 'Tempo', value: data.tempo ? `${Math.round(data.tempo)} BPM` : 'N/A' },
+                { label: 'Key', value: data.key !== undefined ? data.key : 'N/A' },
+                { label: 'Time Signature', value: data.time_signature },
+                { label: 'Energy', value: data.energy ? `${Math.round(data.energy * 100)}%` : 'N/A' },
+                { label: 'Danceability', value: data.danceability ? `${Math.round(data.danceability * 100)}%` : 'N/A' },
+                { label: 'Valence', value: data.valence ? `${Math.round(data.valence * 100)}%` : 'N/A' },
                 
                 // Label & Publishing
                 { label: 'Label', value: data.label },
@@ -1439,7 +1440,7 @@
                 }
             });
             
-            // Build export actions - remove duplicate Export to Excel
+            // Build export actions - only one Export to Excel button
             let exportHtml = '';
             if (data.spotify_url) {
                 exportHtml += `<a href="${data.spotify_url}" target="_blank" class="btn btn-secondary">Open in Spotify</a>`;
@@ -1457,7 +1458,7 @@
                 exportHtml += `<a href="${data.lyrics_data.genius_url}" target="_blank" class="btn btn-secondary">View on Genius</a>`;
             }
             exportHtml += `<button class="btn btn-secondary" onclick="downloadJSON('${data.isrc}')">Download JSON</button>`;
-            exportHtml += `<button class="btn btn-secondary" onclick="exportSingleToExcel('${data.isrc}')">Export to Excel</button>`;
+            exportHtml += `<button class="btn btn-secondary" onclick="exportSingleTrack('${data.isrc}', 'excel')">Export to Excel</button>`;
             
             container.innerHTML = `
                 <div class="section-header">
@@ -1570,10 +1571,6 @@
             } else if (format === 'json') {
                 downloadJSON(isrc);
             }
-        }
-        
-        function exportSingleToExcel(isrc) {
-            exportSingleTrack(isrc, 'excel');
         }
         
         function downloadJSON(isrc) {
