@@ -1000,7 +1000,7 @@ async def root():
     template_paths = [Path("templates/index.html"), Path("templates/enhanced_index.html")]
     for template_path in template_paths:
         if template_path.exists():
-            return HTMLResponse(content=template_path.read_text())
+            return HTMLResponse(content=template_path.read_text(encoding='utf-8'))
     return HTMLResponse(content="<h1>PRISM UI not found</h1><p>Place index.html in /templates directory.</p>")
 
 @app.get("/api/health")

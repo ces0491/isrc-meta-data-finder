@@ -66,8 +66,8 @@
 
         .logo-container {
             display: flex;
-            align-items: center;
-            gap: 1.5rem;
+            align-items: baseline;
+            gap: 1rem;
             margin-bottom: 1rem;
         }
 
@@ -86,8 +86,16 @@
             font-weight: 300;
             letter-spacing: 8px;
             display: flex;
-            align-items: center;
+            align-items: baseline;
             gap: 0.5rem;
+        }
+
+        /* Make "by Precise" smaller */
+        .by-precise {
+            font-size: 1rem;
+            letter-spacing: 2px;
+            opacity: 0.7;
+            margin-left: 0.5rem;
         }
 
         .logo-wave {
@@ -124,6 +132,93 @@
             margin-left: 4rem;
         }
 
+        /* Terminology Guide Toggle */
+        .help-button {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 50px;
+            height: 50px;
+            background: var(--precise-red);
+            color: var(--pure-white);
+            border: none;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+
+        .help-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Terminology Guide Modal */
+        .terminology-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(26, 26, 26, 0.95);
+            z-index: 10000;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .terminology-modal.show {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .terminology-content {
+            background: var(--pure-white);
+            max-width: 800px;
+            width: 100%;
+            padding: 2rem;
+            margin: 2rem 0;
+            position: relative;
+        }
+
+        .terminology-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--precise-red);
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 2rem;
+            cursor: pointer;
+            color: var(--medium-gray);
+        }
+
+        .term-item {
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: var(--light-gray);
+            border-left: 3px solid var(--precise-red);
+        }
+
+        .term-title {
+            font-weight: 600;
+            color: var(--prism-black);
+            margin-bottom: 0.5rem;
+        }
+
+        .term-description {
+            color: var(--medium-gray);
+            font-size: 0.9rem;
+        }
+
         /* Main Container */
         .container {
             max-width: 1200px;
@@ -131,10 +226,142 @@
             padding: 2rem;
         }
 
+        /* Tooltip Styles */
+        .tooltip-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+
+        .info-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 16px;
+            height: 16px;
+            background: var(--medium-gray);
+            color: var(--pure-white);
+            border-radius: 50%;
+            font-size: 10px;
+            margin-left: 0.25rem;
+            cursor: help;
+            vertical-align: middle;
+        }
+
+        .tooltip {
+            position: absolute;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--prism-black);
+            color: var(--pure-white);
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            max-width: 250px;
+            white-space: normal;
+        }
+
+        .tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 5px;
+            border-style: solid;
+            border-color: var(--prism-black) transparent transparent transparent;
+        }
+
+        .tooltip-wrapper:hover .tooltip {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* API Status Bar */
+        .api-status-bar {
+            background: var(--prism-black);
+            color: var(--pure-white);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+            border-left: 4px solid var(--precise-red);
+            position: relative;
+        }
+
+        .api-status-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 0;
+            height: 0;
+            border-style: solid;
+            border-width: 0 40px 40px 0;
+            border-color: transparent var(--precise-red) transparent transparent;
+            opacity: 0.2;
+        }
+
+        .api-badge {
+            padding: 0.5rem 1rem;
+            background: var(--charcoal-gray);
+            border: 1px solid var(--medium-gray);
+            font-size: 0.875rem;
+            font-weight: 600;
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s ease;
+        }
+
+        .api-badge.active {
+            background: var(--precise-red);
+            color: var(--pure-white);
+            border-color: var(--precise-red);
+        }
+
+        .api-badge.active::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-style: solid;
+            border-width: 4px 4px 0 4px;
+            border-color: var(--precise-red) transparent transparent transparent;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--medium-gray);
+        }
+
+        .api-badge.active .status-dot {
+            background: var(--pure-white);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
         /* Status Cards */
         .status-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 1.5rem;
             margin-bottom: 3rem;
         }
@@ -193,78 +420,20 @@
         }
 
         .status-title {
-            font-size: 0.875rem;
+            font-size: 0.75rem;
             color: var(--medium-gray);
             text-transform: uppercase;
             letter-spacing: 1px;
             margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
         }
 
         .status-value {
-            font-size: 2rem;
+            font-size: 1.75rem;
             font-weight: 600;
             color: var(--prism-black);
-        }
-
-        /* API Status Bar */
-        .api-status-bar {
-            background: var(--light-gray);
-            padding: 1rem;
-            margin-bottom: 2rem;
-            display: flex;
-            gap: 1rem;
-            flex-wrap: wrap;
-            align-items: center;
-            border-left: 4px solid var(--precise-red);
-        }
-
-        .api-badge {
-            padding: 0.5rem 1rem;
-            background: var(--pure-white);
-            border: 1px solid var(--border-gray);
-            font-size: 0.875rem;
-            font-weight: 600;
-            position: relative;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: all 0.2s ease;
-        }
-
-        .api-badge.active {
-            background: var(--prism-black);
-            color: var(--pure-white);
-            border-color: var(--prism-black);
-        }
-
-        .api-badge.active::after {
-            content: '';
-            position: absolute;
-            bottom: -4px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 0;
-            height: 0;
-            border-style: solid;
-            border-width: 4px 4px 0 4px;
-            border-color: var(--prism-black) transparent transparent transparent;
-        }
-
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: var(--medium-gray);
-        }
-
-        .api-badge.active .status-dot {
-            background: var(--precise-red);
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
         }
 
         /* Main Analysis Section */
@@ -306,7 +475,8 @@
         }
 
         .input-label {
-            display: block;
+            display: flex;
+            align-items: center;
             margin-bottom: 0.5rem;
             font-weight: 600;
             color: var(--prism-black);
@@ -582,6 +752,10 @@
                 letter-spacing: 4px;
             }
             
+            .by-precise {
+                font-size: 0.875rem;
+            }
+            
             .container {
                 padding: 1rem;
             }
@@ -604,67 +778,107 @@
                 <div class="logo-triangle"></div>
                 <div class="logo-text">
                     PRISM
+                    <span class="by-precise">by Precise</span>
                     <div class="logo-wave"></div>
                 </div>
             </div>
-            <p class="tagline">ANALYTICS ENGINE • METADATA INTELLIGENCE PLATFORM</p>
+            <p class="tagline">METADATA INTELLIGENCE PLATFORM</p>
         </div>
     </header>
 
     <!-- Main Container -->
     <div class="container">
+        <!-- API Status Bar -->
+        <div class="api-status-bar">
+            <span style="font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--pure-white);">
+                SYSTEM STATUS:
+                <span class="tooltip-wrapper">
+                    <span class="info-icon">?</span>
+                    <span class="tooltip">Real-time status of integrated metadata sources</span>
+                </span>
+            </span>
+            <div class="api-badge" id="spotify-status" title="Spotify API">
+                <span class="status-dot"></span>
+                Spotify
+            </div>
+            <div class="api-badge" id="youtube-status" title="YouTube Data API">
+                <span class="status-dot"></span>
+                YouTube
+            </div>
+            <div class="api-badge active" id="musicbrainz-status" title="MusicBrainz (No API key required)">
+                <span class="status-dot"></span>
+                MusicBrainz
+            </div>
+            <div class="api-badge" id="genius-status" title="Genius API">
+                <span class="status-dot"></span>
+                Genius
+            </div>
+            <div class="api-badge" id="lastfm-status" title="Last.fm API">
+                <span class="status-dot"></span>
+                Last.fm
+            </div>
+            <div class="api-badge" id="discogs-status" title="Discogs API">
+                <span class="status-dot"></span>
+                Discogs
+            </div>
+        </div>
+
         <!-- Status Grid -->
         <div class="status-grid">
             <div class="status-card">
                 <div class="status-icon">📊</div>
-                <div class="status-title">Total Tracks</div>
+                <div class="status-title">
+                    Total Tracks
+                    <span class="tooltip-wrapper">
+                        <span class="info-icon">i</span>
+                        <span class="tooltip">Total number of ISRCs analyzed and cached in database</span>
+                    </span>
+                </div>
                 <div class="status-value" id="total-tracks">0</div>
             </div>
             <div class="status-card">
                 <div class="status-icon">✓</div>
-                <div class="status-title">Avg Confidence</div>
+                <div class="status-title">
+                    Avg Confidence
+                    <span class="tooltip-wrapper">
+                        <span class="info-icon">i</span>
+                        <span class="tooltip">Average metadata accuracy score based on source validation</span>
+                    </span>
+                </div>
                 <div class="status-value" id="avg-confidence">0%</div>
             </div>
             <div class="status-card">
-                <div class="status-icon">📝</div>
-                <div class="status-title">With Lyrics</div>
-                <div class="status-value" id="with-lyrics">0</div>
+                <div class="status-icon">🎵</div>
+                <div class="status-title">
+                    Spotify Coverage
+                    <span class="tooltip-wrapper">
+                        <span class="info-icon">i</span>
+                        <span class="tooltip">Percentage of tracks with Spotify metadata</span>
+                    </span>
+                </div>
+                <div class="status-value" id="spotify-coverage">0%</div>
             </div>
             <div class="status-card">
-                <div class="status-icon">🔄</div>
-                <div class="status-title">API Calls Today</div>
-                <div class="status-value" id="api-calls">0</div>
+                <div class="status-icon">📹</div>
+                <div class="status-title">
+                    YouTube Coverage
+                    <span class="tooltip-wrapper">
+                        <span class="info-icon">i</span>
+                        <span class="tooltip">Percentage of tracks with YouTube video data</span>
+                    </span>
+                </div>
+                <div class="status-value" id="youtube-coverage">0%</div>
             </div>
-        </div>
-
-        <!-- API Status Bar -->
-        <div class="api-status-bar">
-            <span style="font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">System Status:</span>
-            <div class="api-badge" id="spotify-status" title="Requires API credentials">
-                <span class="status-dot"></span>
-                Spotify
-            </div>
-            <div class="api-badge" id="youtube-status" title="Requires API key">
-                <span class="status-dot"></span>
-                YouTube
-            </div>
-            <div class="api-badge active" id="musicbrainz-status" title="No API key required">
-                <span class="status-dot"></span>
-                MusicBrainz
-            </div>
-            <div class="api-badge" id="genius-status" title="Requires API key">
-                <span class="status-dot"></span>
-                Genius
-            </div>
-            <div class="api-badge" title="Coming Soon - Not yet implemented">
-                <span class="status-dot"></span>
-                Last.fm
-                <sup style="color: var(--precise-red); font-size: 0.7rem;">SOON</sup>
-            </div>
-            <div class="api-badge" title="Coming Soon - Not yet implemented">
-                <span class="status-dot"></span>
-                Discogs
-                <sup style="color: var(--precise-red); font-size: 0.7rem;">SOON</sup>
+            <div class="status-card">
+                <div class="status-icon">📝</div>
+                <div class="status-title">
+                    With Lyrics
+                    <span class="tooltip-wrapper">
+                        <span class="info-icon">i</span>
+                        <span class="tooltip">Tracks with lyrics and songwriter credits</span>
+                    </span>
+                </div>
+                <div class="status-value" id="with-lyrics">0</div>
             </div>
         </div>
 
@@ -676,7 +890,13 @@
             </div>
 
             <div class="input-group">
-                <label class="input-label">Enter ISRC Code</label>
+                <label class="input-label">
+                    Enter ISRC Code
+                    <span class="tooltip-wrapper">
+                        <span class="info-icon">i</span>
+                        <span class="tooltip">International Standard Recording Code - 12 character identifier (e.g., USRC17607839)</span>
+                    </span>
+                </label>
                 <input type="text" 
                        id="isrc-input" 
                        class="input-field" 
@@ -689,17 +909,32 @@
                 <label class="checkbox-label">
                     <input type="checkbox" id="lyrics-check" checked>
                     <span class="checkbox-custom"></span>
-                    <span>Include Lyrics & Credits</span>
+                    <span>Include Lyrics & Credits
+                        <span class="tooltip-wrapper">
+                            <span class="info-icon">i</span>
+                            <span class="tooltip">Fetch songwriter, producer, and performer credits</span>
+                        </span>
+                    </span>
                 </label>
                 <label class="checkbox-label">
                     <input type="checkbox" id="comprehensive-check" checked>
                     <span class="checkbox-custom"></span>
-                    <span>Comprehensive Analysis</span>
+                    <span>Comprehensive Analysis
+                        <span class="tooltip-wrapper">
+                            <span class="info-icon">i</span>
+                            <span class="tooltip">Query all available data sources for maximum metadata coverage</span>
+                        </span>
+                    </span>
                 </label>
                 <label class="checkbox-label">
                     <input type="checkbox" id="refresh-check">
                     <span class="checkbox-custom"></span>
-                    <span>Force Refresh</span>
+                    <span>Force Refresh
+                        <span class="tooltip-wrapper">
+                            <span class="info-icon">i</span>
+                            <span class="tooltip">Bypass cache and fetch fresh data from all sources</span>
+                        </span>
+                    </span>
                 </label>
             </div>
 
@@ -722,7 +957,13 @@
 
             <!-- File Upload -->
             <div class="input-group">
-                <label class="input-label">Upload CSV File</label>
+                <label class="input-label">
+                    Upload CSV File
+                    <span class="tooltip-wrapper">
+                        <span class="info-icon">i</span>
+                        <span class="tooltip">Upload a CSV containing ISRC codes for batch processing</span>
+                    </span>
+                </label>
                 <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem;">
                     <input type="file" 
                            id="csv-upload" 
@@ -746,7 +987,13 @@
             </div>
 
             <div class="input-group">
-                <label class="input-label">Or Enter Multiple ISRCs Manually</label>
+                <label class="input-label">
+                    Or Enter Multiple ISRCs Manually
+                    <span class="tooltip-wrapper">
+                        <span class="info-icon">i</span>
+                        <span class="tooltip">Paste ISRCs separated by commas, spaces, or new lines</span>
+                    </span>
+                </label>
                 <textarea id="bulk-isrcs" 
                           class="input-field" 
                           rows="4"
@@ -766,6 +1013,71 @@
                 <button class="btn btn-secondary" onclick="exportBulk('json')">
                     Export JSON
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Button -->
+    <button class="help-button" onclick="toggleTerminology()" title="Terminology Guide">
+        ?
+    </button>
+
+    <!-- Terminology Modal -->
+    <div class="terminology-modal" id="terminology-modal">
+        <div class="terminology-content">
+            <div class="terminology-header">
+                <h2>Terminology Guide</h2>
+                <button class="close-modal" onclick="toggleTerminology()">×</button>
+            </div>
+            
+            <div class="term-item">
+                <div class="term-title">ISRC (International Standard Recording Code)</div>
+                <div class="term-description">A unique 12-character identifier for sound recordings and music videos. Format: CC-XXX-YY-NNNNN where CC=country, XXX=registrant, YY=year, NNNNN=designation.</div>
+            </div>
+            
+            <div class="term-item">
+                <div class="term-title">Metadata Confidence Score</div>
+                <div class="term-description">A percentage indicating the reliability of aggregated metadata based on source validation, cross-referencing, and data completeness.</div>
+            </div>
+            
+            <div class="term-item">
+                <div class="term-title">Audio Features</div>
+                <div class="term-description">Technical characteristics of a track including tempo (BPM), key, time signature, energy, danceability, and valence (musical positivity).</div>
+            </div>
+            
+            <div class="term-item">
+                <div class="term-title">Credits</div>
+                <div class="term-description">Attribution information including composers, lyricists, producers, performers, and engineers associated with a recording.</div>
+            </div>
+            
+            <div class="term-item">
+                <div class="term-title">ISWC (International Standard Musical Work Code)</div>
+                <div class="term-description">A unique identifier for musical works (compositions) as opposed to recordings. Links to publishing and composition rights.</div>
+            </div>
+            
+            <div class="term-item">
+                <div class="term-title">UPC (Universal Product Code)</div>
+                <div class="term-description">A barcode used for tracking trade items, often associated with physical or digital album releases.</div>
+            </div>
+            
+            <div class="term-item">
+                <div class="term-title">Publishing Rights</div>
+                <div class="term-description">Legal rights associated with the composition of a song, including mechanical, performance, and synchronization rights.</div>
+            </div>
+            
+            <div class="term-item">
+                <div class="term-title">API Coverage</div>
+                <div class="term-description">The percentage of tracks that have successfully retrieved metadata from a specific data source (Spotify, YouTube, etc.).</div>
+            </div>
+            
+            <div class="term-item">
+                <div class="term-title">Bulk Analysis</div>
+                <div class="term-description">Processing multiple ISRCs simultaneously to generate comprehensive metadata reports for entire catalogs.</div>
+            </div>
+            
+            <div class="term-item">
+                <div class="term-title">Force Refresh</div>
+                <div class="term-description">Bypasses cached data to retrieve the latest information directly from all connected APIs.</div>
             </div>
         </div>
     </div>
@@ -799,6 +1111,11 @@
             });
         });
         
+        function toggleTerminology() {
+            const modal = document.getElementById('terminology-modal');
+            modal.classList.toggle('show');
+        }
+        
         async function checkAPIStatus() {
             try {
                 const response = await fetch('/api/health');
@@ -807,12 +1124,14 @@
                 // Update API badges based on actual status
                 const apiStatuses = health.apis || {};
                 
-                // Update specific API badges
+                // Update all API badges
                 const apiMapping = {
                     'spotify': 'spotify-status',
                     'youtube': 'youtube-status',
                     'musicbrainz': 'musicbrainz-status',
-                    'genius': 'genius-status'
+                    'genius': 'genius-status',
+                    'lastfm': 'lastfm-status',
+                    'discogs': 'discogs-status'
                 };
                 
                 for (const [apiName, elementId] of Object.entries(apiMapping)) {
@@ -822,15 +1141,6 @@
                             badge.classList.add('active');
                         } else {
                             badge.classList.remove('active');
-                            // Add warning if not configured
-                            if (!badge.querySelector('.config-warning')) {
-                                const warning = document.createElement('span');
-                                warning.className = 'config-warning';
-                                warning.style.cssText = 'color: var(--precise-red); font-size: 0.7rem; vertical-align: super;';
-                                warning.textContent = '!';
-                                warning.title = 'API key not configured';
-                                badge.appendChild(warning);
-                            }
                         }
                     }
                 }
@@ -852,7 +1162,7 @@
             
             document.getElementById('file-name').textContent = file.name;
             
-            // Option 1: Parse CSV client-side
+            // Parse CSV client-side
             const reader = new FileReader();
             reader.onload = function(e) {
                 const content = e.target.result;
@@ -986,13 +1296,18 @@
                 const response = await fetch('/api/stats');
                 const stats = await response.json();
                 
+                // Update status cards
                 document.getElementById('total-tracks').textContent = formatNumber(stats.total_tracks || 0);
                 document.getElementById('avg-confidence').textContent = Math.round(stats.avg_confidence || 0) + '%';
-                document.getElementById('with-lyrics').textContent = formatNumber(stats.tracks_with_lyrics || 0);
                 
-                // Calculate API calls
-                const apiCalls = (stats.total_tracks || 0) * 3;
-                document.getElementById('api-calls').textContent = formatNumber(apiCalls);
+                // Calculate coverage percentages
+                const total = stats.total_tracks || 1; // Avoid division by zero
+                const spotifyCoverage = Math.round((stats.spotify_coverage || 0) / total * 100);
+                const youtubeCoverage = Math.round((stats.youtube_coverage || 0) / total * 100);
+                
+                document.getElementById('spotify-coverage').textContent = spotifyCoverage + '%';
+                document.getElementById('youtube-coverage').textContent = youtubeCoverage + '%';
+                document.getElementById('with-lyrics').textContent = formatNumber(stats.tracks_with_lyrics || 0);
                 
             } catch (error) {
                 console.error('Failed to load stats:', error);
@@ -1055,31 +1370,76 @@
             const confidence = data.confidence || 0;
             const quality = data.quality_rating || 'Unknown';
             
-            // Build metadata grid
+            // Store the last analyzed ISRC for exports
+            window.lastAnalyzedISRC = data.isrc;
+            window.lastAnalysisData = data;
+            
+            // Build comprehensive metadata grid - now including credits but excluding IDs
             let metadataHtml = '';
             const fields = [
+                // Basic Track Info
                 { label: 'Title', value: data.title },
                 { label: 'Artist', value: data.artist },
                 { label: 'Album', value: data.album },
+                { label: 'Album Artist', value: data.album_artist },
+                { label: 'Track Number', value: data.track_number },
+                { label: 'Disc Number', value: data.disc_number },
                 { label: 'Duration', value: data.duration_ms ? `${Math.floor(data.duration_ms/60000)}:${String(Math.floor((data.duration_ms%60000)/1000)).padStart(2,'0')}` : 'N/A' },
                 { label: 'Release Date', value: data.release_date },
+                { label: 'Release Year', value: data.release_year },
+                
+                // Music Features
                 { label: 'Tempo', value: data.tempo ? `${Math.round(data.tempo)} BPM` : 'N/A' },
                 { label: 'Key', value: data.key !== undefined ? data.key : 'N/A' },
-                { label: 'Energy', value: data.energy ? `${Math.round(data.energy * 100)}%` : 'N/A' }
+                { label: 'Mode', value: data.mode !== undefined ? (data.mode === 1 ? 'Major' : 'Minor') : 'N/A' },
+                { label: 'Time Signature', value: data.time_signature },
+                { label: 'Energy', value: data.energy ? `${Math.round(data.energy * 100)}%` : 'N/A' },
+                { label: 'Danceability', value: data.danceability ? `${Math.round(data.danceability * 100)}%` : 'N/A' },
+                { label: 'Valence', value: data.valence ? `${Math.round(data.valence * 100)}%` : 'N/A' },
+                
+                // Credits (prioritized)
+                { label: 'Composers', value: data.composers && data.composers.length > 0 ? data.composers.join(', ') : 'N/A' },
+                { label: 'Producers', value: data.producers && data.producers.length > 0 ? data.producers.join(', ') : 'N/A' },
+                { label: 'Writers', value: data.writers && data.writers.length > 0 ? data.writers.join(', ') : 'N/A' },
+                { label: 'Performers', value: data.performers && data.performers.length > 0 ? data.performers.join(', ') : 'N/A' },
+                { label: 'Engineers', value: data.engineers && data.engineers.length > 0 ? data.engineers.join(', ') : 'N/A' },
+                
+                // Label & Publishing
+                { label: 'Label', value: data.label },
+                { label: 'Copyright', value: data.copyright },
+                { label: 'Publisher', value: data.publisher },
+                { label: 'ISWC', value: data.iswc },
+                { label: 'UPC', value: data.upc },
+                
+                // Genre & Tags
+                { label: 'Genres', value: data.genres && data.genres.length > 0 ? data.genres.join(', ') : 'N/A' },
+                { label: 'Tags', value: data.tags && data.tags.length > 0 ? data.tags.join(', ') : 'N/A' },
+                { label: 'Mood', value: data.mood },
+                
+                // Popularity & Stats
+                { label: 'Spotify Popularity', value: data.spotify_popularity },
+                { label: 'YouTube Views', value: data.youtube_views ? formatNumber(data.youtube_views) : 'N/A' },
+                { label: 'Play Count', value: data.play_count ? formatNumber(data.play_count) : 'N/A' },
+                
+                // Additional Info
+                { label: 'Explicit', value: data.explicit !== undefined ? (data.explicit ? 'Yes' : 'No') : 'N/A' },
+                { label: 'Language', value: data.language },
+                { label: 'Markets Available', value: data.available_markets && data.available_markets.length > 0 ? `${data.available_markets.length} countries` : 'N/A' }
             ];
             
+            // Only display fields that have values
             fields.forEach(field => {
-                if (field.value && field.value !== 'N/A') {
+                if (field.value && field.value !== 'N/A' && field.value !== 'undefined') {
                     metadataHtml += `
                         <div class="metadata-item">
                             <div class="metadata-label">${field.label}</div>
-                            <div class="metadata-value">${field.value || 'Unknown'}</div>
+                            <div class="metadata-value">${field.value}</div>
                         </div>
                     `;
                 }
             });
             
-            // Build export actions
+            // Build export actions - remove duplicate Export to Excel
             let exportHtml = '';
             if (data.spotify_url) {
                 exportHtml += `<a href="${data.spotify_url}" target="_blank" class="btn btn-secondary">Open in Spotify</a>`;
@@ -1087,10 +1447,17 @@
             if (data.youtube_url) {
                 exportHtml += `<a href="${data.youtube_url}" target="_blank" class="btn btn-secondary">Watch on YouTube</a>`;
             }
+            if (data.lastfm_url) {
+                exportHtml += `<a href="${data.lastfm_url}" target="_blank" class="btn btn-secondary">View on Last.fm</a>`;
+            }
+            if (data.discogs_url) {
+                exportHtml += `<a href="${data.discogs_url}" target="_blank" class="btn btn-secondary">View on Discogs</a>`;
+            }
             if (data.lyrics_data?.genius_url) {
                 exportHtml += `<a href="${data.lyrics_data.genius_url}" target="_blank" class="btn btn-secondary">View on Genius</a>`;
             }
             exportHtml += `<button class="btn btn-secondary" onclick="downloadJSON('${data.isrc}')">Download JSON</button>`;
+            exportHtml += `<button class="btn btn-secondary" onclick="exportSingleToExcel('${data.isrc}')">Export to Excel</button>`;
             
             container.innerHTML = `
                 <div class="section-header">
@@ -1104,7 +1471,8 @@
                     </p>
                     <p style="color: var(--medium-gray);">
                         <strong>Quality Rating:</strong> ${quality} | 
-                        <strong>Sources:</strong> ${(data.sources || []).join(', ') || 'None'}
+                        <strong>Sources:</strong> ${(data.sources || []).join(', ') || 'None'} |
+                        <strong>Fields Found:</strong> ${metadataHtml.match(/metadata-item/g)?.length || 0}
                     </p>
                 </div>
                 
@@ -1123,8 +1491,7 @@
                 </div>
                 
                 <div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--border-gray); color: var(--medium-gray); font-size: 0.875rem;">
-                    Processing Time: ${data.processing_time_ms || 0}ms | 
-                    Data Completeness: ${(data.data_completeness || 0).toFixed(1)}%
+                    Data Completeness: ${(data.data_completeness || 0).toFixed(1)}% | Last Updated: ${new Date().toLocaleString()}
                 </div>
             `;
             
@@ -1132,10 +1499,16 @@
         }
         
         async function exportBulk(format) {
+            // First check if we have a single analyzed ISRC
+            if (window.lastAnalyzedISRC && !document.getElementById('bulk-isrcs').value.trim()) {
+                // Export the single analyzed ISRC
+                return exportSingleTrack(window.lastAnalyzedISRC, format);
+            }
+            
             const isrcs = document.getElementById('bulk-isrcs').value.trim();
             
             if (!isrcs) {
-                alert('Please enter ISRCs or upload a CSV file first');
+                alert('Please analyze an ISRC first, or enter multiple ISRCs for bulk export');
                 return;
             }
             
@@ -1157,7 +1530,7 @@
                     const blob = await response.blob();
                     const extension = format === 'excel' ? 'xlsx' : format;
                     const timestamp = new Date().toISOString().slice(0,10);
-                    downloadFile(blob, `prism_metadata_export_${timestamp}.${extension}`);
+                    downloadFile(blob, `track_metadata_export_${timestamp}.${extension}`);
                 } else {
                     const error = await response.json();
                     alert(error.detail || 'Export failed');
@@ -1169,11 +1542,45 @@
             }
         }
         
+        function exportSingleTrack(isrc, format) {
+            if (format === 'excel' || format === 'csv') {
+                showLoading(`Generating ${format.toUpperCase()} export for ${isrc}...`);
+                
+                // For single track, add it to the bulk export with just one ISRC
+                const endpoint = format === 'excel' ? '/api/bulk-excel' : '/api/bulk-csv';
+                
+                fetch(endpoint + '?' + new URLSearchParams({ isrcs: isrc }))
+                    .then(response => {
+                        if (response.ok) {
+                            return response.blob();
+                        } else {
+                            throw new Error('Export failed');
+                        }
+                    })
+                    .then(blob => {
+                        const extension = format === 'excel' ? 'xlsx' : 'csv';
+                        downloadFile(blob, `track_metadata_${isrc}.${extension}`);
+                    })
+                    .catch(error => {
+                        alert('Export error: ' + error.message);
+                    })
+                    .finally(() => {
+                        hideLoading();
+                    });
+            } else if (format === 'json') {
+                downloadJSON(isrc);
+            }
+        }
+        
+        function exportSingleToExcel(isrc) {
+            exportSingleTrack(isrc, 'excel');
+        }
+        
         function downloadJSON(isrc) {
-            // Store the last analysis data globally for download
+            // Use the stored analysis data for download
             const data = window.lastAnalysisData || { isrc: isrc, message: 'Full data would be here' };
             const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-            downloadFile(blob, `prism_metadata_${isrc}.json`);
+            downloadFile(blob, `track_metadata_${isrc}.json`);
         }
         
         function downloadSampleCSV() {
@@ -1184,13 +1591,13 @@ DEUM21900123,Sample Track 3,Third Artist,Label C,Needs review
 FRFR21800456,Sample Track 4,Fourth Artist,Label A,
 USCA21602485,Sample Track 5,Fifth Artist,Label D,High value
 
-# This is a sample CSV file for PRISM Analytics Engine
+# This is a sample CSV file for the ISRC Metadata finder
 # You can include ISRCs in any column
 # The system will automatically detect and extract valid ISRC codes
 # ISRCs should be 12 characters: 2 country code + 3 registrant + 2 year + 5 designation`;
             
             const blob = new Blob([sampleContent], { type: 'text/csv' });
-            downloadFile(blob, 'prism_sample_isrcs.csv');
+            downloadFile(blob, 'sample_isrcs.csv');
         }
         
         function downloadFile(blob, filename) {
@@ -1212,14 +1619,6 @@ USCA21602485,Sample Track 5,Fifth Artist,Label D,High value
         function hideLoading() {
             document.getElementById('loading').classList.remove('show');
         }
-        
-        // Store last analysis data for download
-        window.lastAnalysisData = null;
-        const originalDisplayResults = displayResults;
-        displayResults = function(data) {
-            window.lastAnalysisData = data;
-            originalDisplayResults(data);
-        };
     </script>
 </body>
 </html>
