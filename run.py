@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 PRISM Analytics - Music Metadata Intelligence System
-Main Application Entry Point
+Main Application Entry Point with Complete Export Fields
 """
 
 import os
@@ -339,6 +339,11 @@ class DatabaseManager:
             row = cursor.fetchone()
             stats["musicbrainz_coverage"] = row["count"] if row else 0
             
+            # Add credits count
+            cursor.execute("SELECT COUNT(DISTINCT isrc) as count FROM track_credits")
+            row = cursor.fetchone()
+            stats["tracks_with_credits"] = row["count"] if row else 0
+            
             return stats
 
     def test_connection(self) -> bool:
@@ -671,15 +676,15 @@ class EnhancedConfidenceScorer:
 
 # ============= EXPORT SERVICE =============
 class ExportService:
-    """Export service with comprehensive Excel support"""
+    """Export service with comprehensive Excel support and ALL fields"""
     
     @staticmethod
     def create_csv(metadata_list: list[dict[str, Any]]) -> str:
-        """Create CSV export"""
+        """Create CSV export with ALL available fields"""
         output = io.StringIO()
         
         # Add metadata header
-        output.write("# ISRC Metadata Export\n")
+        output.write("# PRISM Analytics Engine - Metadata Export\n")
         output.write(f"# Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
         output.write(f"# Total Records: {len(metadata_list)}\n")
         output.write("#\n")
@@ -687,46 +692,141 @@ class ExportService:
         if not metadata_list:
             return output.getvalue()
         
+        # Complete list of ALL fields
         fieldnames = [
+            # Basic Info
             "ISRC", "Title", "Artist", "Album", "Duration_MS", "Release_Date",
+            
+            # Platform IDs
             "Spotify_ID", "Spotify_URL", "MusicBrainz_ID", "YouTube_ID", "YouTube_URL",
-            "YouTube_Views", "Tempo", "Key", "Energy", "Danceability", "Valence",
-            "Popularity", "Confidence_Score", "Quality_Rating", "Sources"
+            "Genius_URL", "LastFM_URL", "Discogs_Release_ID", "Discogs_Master_ID", "Discogs_URL",
+            
+            # Metrics
+            "YouTube_Views", "LastFM_Playcount", "LastFM_Listeners", "Spotify_Popularity",
+            
+            # Audio Features  
+            "Tempo", "Key", "Mode", "Time_Signature", "Energy", "Danceability", "Valence",
+            "Loudness", "Speechiness", "Acousticness", "Instrumentalness", "Liveness",
+            
+            # Genre & Tags
+            "Genres", "Styles", "Tags",
+            
+            # Label & Publishing
+            "Label", "Catalog_Number",
+            
+            # Credits (as semicolon-separated lists)
+            "Credits_Names", "Credits_Types", "Credits_Count",
+            
+            # Quality Metrics
+            "Confidence_Score", "Data_Completeness", "Quality_Rating", "Sources",
+            
+            # Timestamps
+            "Last_Updated"
         ]
         
         writer = csv.DictWriter(output, fieldnames=fieldnames)
         writer.writeheader()
         
         for item in metadata_list:
+            # Process credits into lists
+            credits = item.get("credits", [])
+            credit_names = []
+            credit_types = []
+            if credits:
+                for credit in credits:
+                    if isinstance(credit, dict):
+                        credit_names.append(credit.get("name", credit.get("person_name", "")))
+                        credit_types.append(credit.get("credit_type", ""))
+            
+            # Process genres, styles, tags
+            genres = item.get("genres", [])
+            if isinstance(genres, list):
+                genres_str = "; ".join(genres)
+            else:
+                genres_str = str(genres) if genres else ""
+                
+            styles = item.get("styles", [])
+            if isinstance(styles, list):
+                styles_str = "; ".join(styles)
+            else:
+                styles_str = str(styles) if styles else ""
+                
+            tags = item.get("tags", [])
+            if isinstance(tags, list):
+                tags_str = "; ".join(tags)
+            else:
+                tags_str = str(tags) if tags else ""
+            
             writer.writerow({
+                # Basic Info
                 "ISRC": item.get("isrc", ""),
                 "Title": item.get("title", ""),
                 "Artist": item.get("artist", ""),
                 "Album": item.get("album", ""),
                 "Duration_MS": item.get("duration_ms", ""),
                 "Release_Date": item.get("release_date", ""),
+                
+                # Platform IDs
                 "Spotify_ID": item.get("spotify_id", ""),
                 "Spotify_URL": item.get("spotify_url", ""),
-                "MusicBrainz_ID": item.get("musicbrainz_id", ""),
+                "MusicBrainz_ID": item.get("musicbrainz_id", item.get("musicbrainz_recording_id", "")),
                 "YouTube_ID": item.get("youtube_video_id", ""),
                 "YouTube_URL": item.get("youtube_url", ""),
+                "Genius_URL": item.get("genius_url", item.get("lyrics_data", {}).get("genius_url", "") if isinstance(item.get("lyrics_data"), dict) else ""),
+                "LastFM_URL": item.get("lastfm_url", ""),
+                "Discogs_Release_ID": item.get("discogs_release_id", ""),
+                "Discogs_Master_ID": item.get("discogs_master_id", ""),
+                "Discogs_URL": item.get("discogs_url", ""),
+                
+                # Metrics
                 "YouTube_Views": item.get("youtube_views", ""),
+                "LastFM_Playcount": item.get("lastfm_playcount", ""),
+                "LastFM_Listeners": item.get("lastfm_listeners", ""),
+                "Spotify_Popularity": item.get("popularity", item.get("spotify_popularity", "")),
+                
+                # Audio Features
                 "Tempo": item.get("tempo", ""),
                 "Key": item.get("key", ""),
+                "Mode": item.get("mode", ""),
+                "Time_Signature": item.get("time_signature", ""),
                 "Energy": item.get("energy", ""),
                 "Danceability": item.get("danceability", ""),
                 "Valence": item.get("valence", ""),
-                "Popularity": item.get("popularity", ""),
+                "Loudness": item.get("loudness", ""),
+                "Speechiness": item.get("speechiness", ""),
+                "Acousticness": item.get("acousticness", ""),
+                "Instrumentalness": item.get("instrumentalness", ""),
+                "Liveness": item.get("liveness", ""),
+                
+                # Genre & Tags
+                "Genres": genres_str,
+                "Styles": styles_str,
+                "Tags": tags_str,
+                
+                # Label & Publishing
+                "Label": item.get("label", ""),
+                "Catalog_Number": item.get("catalog_number", ""),
+                
+                # Credits
+                "Credits_Names": "; ".join(credit_names),
+                "Credits_Types": "; ".join(credit_types),
+                "Credits_Count": len(credits),
+                
+                # Quality Metrics
                 "Confidence_Score": item.get("confidence_score", item.get("confidence", 0)),
+                "Data_Completeness": item.get("data_completeness", 0),
                 "Quality_Rating": item.get("quality_rating", ""),
-                "Sources": "|".join(item.get("sources", []))
+                "Sources": "|".join(item.get("sources", [])),
+                
+                # Timestamps
+                "Last_Updated": item.get("last_updated", "")
             })
         
         return output.getvalue()
     
     @staticmethod
     def create_excel(metadata_list: list[dict[str, Any]], db_stats: dict[str, Any] | None = None) -> io.BytesIO:
-        """Create comprehensive Excel export with PRISM branding"""
+        """Create comprehensive Excel export with ALL fields and PRISM branding"""
         if not EXCEL_AVAILABLE:
             raise ValueError("Excel export not available. Install xlsxwriter.")
         
@@ -775,16 +875,34 @@ class ExportService:
         worksheet = workbook.add_worksheet('Track Metadata')
         
         # Add PRISM branding header
-        worksheet.merge_range(0, 0, 0, 21, 'ISRC Metadata Export', title_format)
-        worksheet.merge_range(1, 0, 1, 21, f'Generated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}', subtitle_format)
-        worksheet.merge_range(2, 0, 2, 21, f'Total Records: {len(metadata_list)}', subtitle_format)
+        worksheet.merge_range(0, 0, 0, 37, 'PRISM Analytics Engine - Complete Metadata Export', title_format)
+        worksheet.merge_range(1, 0, 1, 37, f'Generated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}', subtitle_format)
+        worksheet.merge_range(2, 0, 2, 37, f'Total Records: {len(metadata_list)}', subtitle_format)
         
-        # Headers
+        # Complete headers for ALL fields
         headers = [
+            # Basic Info
             'ISRC', 'Title', 'Artist', 'Album', 'Duration (ms)', 'Release Date',
+            
+            # Platform IDs
             'Spotify ID', 'Spotify URL', 'MusicBrainz ID', 'YouTube ID', 'YouTube URL',
-            'YouTube Views', 'Tempo (BPM)', 'Key', 'Mode', 'Energy', 'Danceability',
-            'Valence', 'Popularity', 'Confidence %', 'Quality', 'Sources'
+            'Genius URL', 'Last.fm URL', 'Discogs Release ID', 'Discogs Master ID', 'Discogs URL',
+            
+            # Metrics
+            'YouTube Views', 'Last.fm Playcount', 'Last.fm Listeners', 'Spotify Popularity',
+            
+            # Audio Features
+            'Tempo (BPM)', 'Key', 'Mode', 'Time Signature', 'Energy', 'Danceability', 
+            'Valence', 'Loudness', 'Speechiness', 'Acousticness', 'Instrumentalness', 'Liveness',
+            
+            # Genre & Tags
+            'Genres', 'Styles', 'Tags',
+            
+            # Label & Publishing
+            'Label', 'Catalog Number',
+            
+            # Quality Metrics
+            'Confidence %', 'Completeness %', 'Quality', 'Sources'
         ]
         
         # Write headers
@@ -792,7 +910,15 @@ class ExportService:
             worksheet.write(4, col, header, header_format)
         
         # Set column widths
-        column_widths = [12, 30, 30, 30, 12, 12, 15, 40, 15, 15, 40, 12, 10, 8, 8, 8, 12, 8, 10, 12, 10, 20]
+        column_widths = [
+            12, 30, 30, 30, 12, 12,  # Basic
+            15, 40, 15, 15, 40, 40, 40, 15, 15, 40,  # Platform IDs
+            12, 12, 12, 10,  # Metrics
+            10, 8, 8, 10, 8, 12, 8, 8, 8, 8, 8, 8,  # Audio Features
+            20, 20, 20,  # Genre & Tags
+            20, 15,  # Label
+            10, 10, 10, 20  # Quality
+        ]
         for i, width in enumerate(column_widths):
             if i < len(headers):
                 worksheet.set_column(i, i, width)
@@ -800,70 +926,165 @@ class ExportService:
         # Write data
         for row_idx, item in enumerate(metadata_list):
             row = row_idx + 5
+            col = 0
             
-            # Get confidence details
-            confidence = item.get("confidence_score", item.get("confidence", 0))
-            quality = item.get("quality_rating", "")
-            if not quality and item.get("confidence_details"):
-                quality = item["confidence_details"].get("quality_rating", "Unknown")
+            # Basic Info
+            worksheet.write(row, col, str(item.get("isrc", ""))); col += 1
+            worksheet.write(row, col, str(item.get("title", ""))); col += 1
+            worksheet.write(row, col, str(item.get("artist", ""))); col += 1
+            worksheet.write(row, col, str(item.get("album", ""))); col += 1
+            worksheet.write(row, col, str(item.get("duration_ms", ""))); col += 1
+            worksheet.write(row, col, str(item.get("release_date", ""))); col += 1
             
-            # Write basic data
-            worksheet.write(row, 0, str(item.get("isrc", "")))
-            worksheet.write(row, 1, str(item.get("title", "")))
-            worksheet.write(row, 2, str(item.get("artist", "")))
-            worksheet.write(row, 3, str(item.get("album", "")))
-            worksheet.write(row, 4, str(item.get("duration_ms", "")))
-            worksheet.write(row, 5, str(item.get("release_date", "")))
-            worksheet.write(row, 6, str(item.get("spotify_id", "")))
+            # Platform IDs
+            worksheet.write(row, col, str(item.get("spotify_id", ""))); col += 1
             
             # Spotify URL as hyperlink
             spotify_url = item.get("spotify_url", "")
             if spotify_url:
-                worksheet.write_url(row, 7, spotify_url, string="Open in Spotify")
+                worksheet.write_url(row, col, spotify_url, string="Open in Spotify")
             else:
-                worksheet.write(row, 7, "")
+                worksheet.write(row, col, "")
+            col += 1
             
-            worksheet.write(row, 8, item.get("musicbrainz_id", ""))
-            worksheet.write(row, 9, item.get("youtube_video_id", ""))
+            worksheet.write(row, col, item.get("musicbrainz_id", item.get("musicbrainz_recording_id", ""))); col += 1
+            worksheet.write(row, col, item.get("youtube_video_id", "")); col += 1
             
             # YouTube URL as hyperlink
             youtube_url = item.get("youtube_url", "")
             if youtube_url:
-                worksheet.write_url(row, 10, youtube_url, string="Watch on YouTube")
+                worksheet.write_url(row, col, youtube_url, string="Watch on YouTube")
             else:
-                worksheet.write(row, 10, "")
+                worksheet.write(row, col, "")
+            col += 1
             
-            worksheet.write(row, 11, str(item.get("youtube_views", "")))
-            worksheet.write(row, 12, str(item.get("tempo", "")))
-            worksheet.write(row, 13, str(item.get("key", "")))
-            worksheet.write(row, 14, str(item.get("mode", "")))
-            worksheet.write(row, 15, str(item.get("energy", "")))
-            worksheet.write(row, 16, str(item.get("danceability", "")))
-            worksheet.write(row, 17, str(item.get("valence", "")))
-            worksheet.write(row, 18, str(item.get("popularity", "")))
+            # Genius URL
+            genius_url = item.get("genius_url", "")
+            if not genius_url and isinstance(item.get("lyrics_data"), dict):
+                genius_url = item["lyrics_data"].get("genius_url", "")
+            if genius_url:
+                worksheet.write_url(row, col, genius_url, string="View on Genius")
+            else:
+                worksheet.write(row, col, "")
+            col += 1
             
-            # Confidence with color coding
+            # Last.fm URL
+            lastfm_url = item.get("lastfm_url", "")
+            if lastfm_url:
+                worksheet.write_url(row, col, lastfm_url, string="View on Last.fm")
+            else:
+                worksheet.write(row, col, "")
+            col += 1
+            
+            # Discogs IDs and URL
+            worksheet.write(row, col, str(item.get("discogs_release_id", ""))); col += 1
+            worksheet.write(row, col, str(item.get("discogs_master_id", ""))); col += 1
+            
+            discogs_url = item.get("discogs_url", "")
+            if discogs_url:
+                worksheet.write_url(row, col, discogs_url, string="View on Discogs")
+            else:
+                worksheet.write(row, col, "")
+            col += 1
+            
+            # Metrics
+            worksheet.write(row, col, str(item.get("youtube_views", ""))); col += 1
+            worksheet.write(row, col, str(item.get("lastfm_playcount", ""))); col += 1
+            worksheet.write(row, col, str(item.get("lastfm_listeners", ""))); col += 1
+            worksheet.write(row, col, str(item.get("popularity", item.get("spotify_popularity", "")))); col += 1
+            
+            # Audio Features
+            worksheet.write(row, col, str(item.get("tempo", ""))); col += 1
+            worksheet.write(row, col, str(item.get("key", ""))); col += 1
+            worksheet.write(row, col, str(item.get("mode", ""))); col += 1
+            worksheet.write(row, col, str(item.get("time_signature", ""))); col += 1
+            worksheet.write(row, col, str(item.get("energy", ""))); col += 1
+            worksheet.write(row, col, str(item.get("danceability", ""))); col += 1
+            worksheet.write(row, col, str(item.get("valence", ""))); col += 1
+            worksheet.write(row, col, str(item.get("loudness", ""))); col += 1
+            worksheet.write(row, col, str(item.get("speechiness", ""))); col += 1
+            worksheet.write(row, col, str(item.get("acousticness", ""))); col += 1
+            worksheet.write(row, col, str(item.get("instrumentalness", ""))); col += 1
+            worksheet.write(row, col, str(item.get("liveness", ""))); col += 1
+            
+            # Genre & Tags
+            genres = item.get("genres", [])
+            if isinstance(genres, list):
+                worksheet.write(row, col, ", ".join(genres))
+            else:
+                worksheet.write(row, col, str(genres) if genres else "")
+            col += 1
+            
+            styles = item.get("styles", [])
+            if isinstance(styles, list):
+                worksheet.write(row, col, ", ".join(styles))
+            else:
+                worksheet.write(row, col, str(styles) if styles else "")
+            col += 1
+            
+            tags = item.get("tags", [])
+            if isinstance(tags, list):
+                worksheet.write(row, col, ", ".join(tags))
+            else:
+                worksheet.write(row, col, str(tags) if tags else "")
+            col += 1
+            
+            # Label & Publishing
+            worksheet.write(row, col, str(item.get("label", ""))); col += 1
+            worksheet.write(row, col, str(item.get("catalog_number", ""))); col += 1
+            
+            # Quality Metrics with color coding
+            confidence = item.get("confidence_score", item.get("confidence", 0))
             if confidence >= 80:
-                worksheet.write(row, 19, confidence, high_confidence)
+                worksheet.write(row, col, confidence, high_confidence)
             elif confidence >= 60:
-                worksheet.write(row, 19, confidence, medium_confidence)
+                worksheet.write(row, col, confidence, medium_confidence)
             else:
-                worksheet.write(row, 19, confidence, low_confidence)
+                worksheet.write(row, col, confidence, low_confidence)
+            col += 1
             
-            worksheet.write(row, 20, quality)
+            worksheet.write(row, col, item.get("data_completeness", 0)); col += 1
+            worksheet.write(row, col, item.get("quality_rating", "")); col += 1
             
             # Sources
             sources = item.get("sources", [])
             if isinstance(sources, list):
-                worksheet.write(row, 21, ", ".join(str(s) for s in sources))
+                worksheet.write(row, col, ", ".join(str(s) for s in sources))
             else:
-                worksheet.write(row, 21, str(sources))
+                worksheet.write(row, col, str(sources))
+        
+        # Add Credits sheet
+        credits_sheet = workbook.add_worksheet('Credits')
+        credits_sheet.merge_range(0, 0, 0, 4, 'Track Credits', title_format)
+        
+        credit_headers = ['ISRC', 'Credit Type', 'Name', 'Role Details', 'Source']
+        for col, header in enumerate(credit_headers):
+            credits_sheet.write(2, col, header, header_format)
+        
+        credit_row = 3
+        for item in metadata_list:
+            credits = item.get("credits", [])
+            if credits:
+                for credit in credits:
+                    if isinstance(credit, dict):
+                        credits_sheet.write(credit_row, 0, item.get("isrc", ""))
+                        credits_sheet.write(credit_row, 1, credit.get("credit_type", ""))
+                        credits_sheet.write(credit_row, 2, credit.get("name", credit.get("person_name", "")))
+                        credits_sheet.write(credit_row, 3, str(credit.get("role_details", "")))
+                        credits_sheet.write(credit_row, 4, credit.get("source_api", credit.get("source", "")))
+                        credit_row += 1
+        
+        credits_sheet.set_column(0, 0, 12)
+        credits_sheet.set_column(1, 1, 20)
+        credits_sheet.set_column(2, 2, 30)
+        credits_sheet.set_column(3, 3, 40)
+        credits_sheet.set_column(4, 4, 15)
         
         # Add summary sheet
         summary_sheet = workbook.add_worksheet('Summary')
         
         # Summary branding
-        summary_sheet.merge_range(0, 0, 0, 1, 'Summary', title_format)
+        summary_sheet.merge_range(0, 0, 0, 1, 'Analysis Summary', title_format)
         summary_sheet.merge_range(1, 0, 1, 1, f'Analysis Date: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}', subtitle_format)
         
         # Summary headers
@@ -876,8 +1097,10 @@ class ExportService:
         avg_confidence = sum(item.get("confidence_score", item.get("confidence", 0)) for item in metadata_list) / max(total_tracks, 1)
         spotify_found = sum(1 for item in metadata_list if item.get("spotify_id"))
         youtube_found = sum(1 for item in metadata_list if item.get("youtube_video_id"))
-        musicbrainz_found = sum(1 for item in metadata_list if item.get("musicbrainz_id"))
+        musicbrainz_found = sum(1 for item in metadata_list if item.get("musicbrainz_id") or item.get("musicbrainz_recording_id"))
         genius_found = sum(1 for item in metadata_list if "Genius" in item.get("sources", []))
+        lastfm_found = sum(1 for item in metadata_list if "Lastfm" in item.get("sources", []))
+        discogs_found = sum(1 for item in metadata_list if "Discogs" in item.get("sources", []))
         
         # Write summary statistics
         stats = [
@@ -890,6 +1113,8 @@ class ExportService:
             ('YouTube Coverage', f'{youtube_found}/{total_tracks} ({youtube_found/total_tracks*100:.1f}%)' if total_tracks > 0 else '0/0 (0%)'),
             ('MusicBrainz Coverage', f'{musicbrainz_found}/{total_tracks} ({musicbrainz_found/total_tracks*100:.1f}%)' if total_tracks > 0 else '0/0 (0%)'),
             ('Genius Coverage', f'{genius_found}/{total_tracks} ({genius_found/total_tracks*100:.1f}%)' if total_tracks > 0 else '0/0 (0%)'),
+            ('Last.fm Coverage', f'{lastfm_found}/{total_tracks} ({lastfm_found/total_tracks*100:.1f}%)' if total_tracks > 0 else '0/0 (0%)'),
+            ('Discogs Coverage', f'{discogs_found}/{total_tracks} ({discogs_found/total_tracks*100:.1f}%)' if total_tracks > 0 else '0/0 (0%)'),
         ]
         
         # Add database statistics if available
@@ -900,6 +1125,7 @@ class ExportService:
                 ('Total Tracks in DB', str(db_stats.get('total_tracks', 0))),
                 ('Avg DB Confidence', f'{db_stats.get("avg_confidence", 0):.1f}%'),
                 ('Tracks with Lyrics', str(db_stats.get('tracks_with_lyrics', 0))),
+                ('Tracks with Credits', str(db_stats.get('tracks_with_credits', 0))),
             ])
         
         for row_idx, (metric, value) in enumerate(stats):
@@ -935,8 +1161,8 @@ def create_app() -> FastAPI:
     """Create and configure FastAPI application"""
     
     app = FastAPI(
-        title="ISRC Meta Data Finder",
-        description="Music Metadata Intelligence",
+        title="PRISM Analytics Engine",
+        description="Music Metadata Intelligence Platform",
         version="2.1.0",
         docs_url="/api/docs",
         redoc_url="/api/redoc"
@@ -1011,7 +1237,7 @@ async def health_check():
     
     return {
         "status": "healthy",
-        "service": "ISRC Meta Data Finder",
+        "service": "PRISM Analytics Engine",
         "version": "2.1.0",
         "timestamp": datetime.now().isoformat(),
         "database": db_stats,
@@ -1079,7 +1305,7 @@ async def analyze_enhanced(request: ISRCAnalysisRequest):
 
 @app.get("/api/bulk-csv")
 async def bulk_csv_export(isrcs: str = Query(..., description="Comma-separated ISRCs")):
-    """Bulk CSV export"""
+    """Bulk CSV export with ALL fields"""
     isrc_list = [clean_isrc(isrc) for isrc in isrcs.split(",") if isrc.strip()]
     if not isrc_list:
         raise HTTPException(status_code=400, detail="No valid ISRCs provided")
@@ -1096,6 +1322,7 @@ async def bulk_csv_export(isrcs: str = Query(..., description="Comma-separated I
                 confidence_data = app.state.confidence_scorer.calculate_score(result)
                 result.update({
                     "confidence_score": confidence_data["confidence_score"],
+                    "data_completeness": confidence_data["data_completeness"],
                     "quality_rating": confidence_data["quality_rating"]
                 })
                 metadata_list.append(result)
@@ -1107,12 +1334,12 @@ async def bulk_csv_export(isrcs: str = Query(..., description="Comma-separated I
     return Response(
         content=csv_content,
         media_type="text/csv",
-        headers={"Content-Disposition": f"attachment; filename=isrc_meta_data_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"}
+        headers={"Content-Disposition": f"attachment; filename=prism_metadata_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"}
     )
 
 @app.get("/api/bulk-excel")
 async def bulk_excel_export(isrcs: str = Query(..., description="Comma-separated ISRCs")):
-    """Bulk Excel export with comprehensive summary"""
+    """Bulk Excel export with ALL fields and comprehensive summary"""
     if not EXCEL_AVAILABLE:
         raise HTTPException(status_code=500, detail="Excel export not available. Install xlsxwriter.")
     
@@ -1132,6 +1359,7 @@ async def bulk_excel_export(isrcs: str = Query(..., description="Comma-separated
                 confidence_data = app.state.confidence_scorer.calculate_score(result)
                 result.update({
                     "confidence_score": confidence_data["confidence_score"],
+                    "data_completeness": confidence_data["data_completeness"],
                     "quality_rating": confidence_data["quality_rating"],
                     "confidence_details": confidence_data
                 })
@@ -1146,7 +1374,7 @@ async def bulk_excel_export(isrcs: str = Query(..., description="Comma-separated
     return StreamingResponse(
         excel_file,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": f"attachment; filename=isrc_meta_data_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"}
+        headers={"Content-Disposition": f"attachment; filename=prism_metadata_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"}
     )
 
 @app.post("/api/bulk-analyze")
@@ -1161,6 +1389,7 @@ async def bulk_analyze(request: BulkAnalysisRequest):
         confidence_data = app.state.confidence_scorer.calculate_score(result)
         result.update({
             "confidence_score": confidence_data["confidence_score"],
+            "data_completeness": confidence_data["data_completeness"],
             "quality_rating": confidence_data["quality_rating"],
             "confidence_details": confidence_data
         })
@@ -1177,7 +1406,7 @@ async def bulk_analyze(request: BulkAnalysisRequest):
 # ============= MAIN ENTRY POINT =============
 if __name__ == "__main__":
     print("=" * 60)
-    print("🎵 ISRC Metadata Finder")
+    print("🎵 PRISM Analytics Engine")
     print("=" * 60)
     
     config = Config()
@@ -1235,6 +1464,7 @@ if __name__ == "__main__":
     print(f"  • Enhanced Confidence Scoring: ✅")
     print(f"  • Async Processing: ✅")
     print(f"  • Multi-Source Aggregation: ✅")
+    print(f"  • Complete Field Export (CSV/Excel): ✅")
     
     # API Statistics
     try:
@@ -1247,6 +1477,7 @@ if __name__ == "__main__":
                 print(f"  • Total Tracks: {stats.get('total_tracks', 0)}")
                 print(f"  • Average Confidence: {stats.get('avg_confidence', 0):.1f}%")
                 print(f"  • Tracks with Lyrics: {stats.get('tracks_with_lyrics', 0)}")
+                print(f"  • Tracks with Credits: {stats.get('tracks_with_credits', 0)}")
                 print(f"  • Spotify Coverage: {stats.get('spotify_coverage', 0)}")
                 print(f"  • YouTube Coverage: {stats.get('youtube_coverage', 0)}")
     except Exception as e:

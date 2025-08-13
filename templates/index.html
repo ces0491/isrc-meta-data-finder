@@ -15,6 +15,11 @@
             --medium-gray: #666666;
             --border-gray: #E0E0E0;
             
+            /* Status Colors */
+            --status-green: #28a745;
+            --status-red: #dc3545;
+            --status-yellow: #ffc107;
+            
             /* Typography */
             --font-primary: 'Segoe UI', system-ui, -apple-system, sans-serif;
             --font-data: 'Consolas', 'Monaco', monospace;
@@ -282,7 +287,7 @@
             visibility: visible;
         }
 
-        /* API Status Bar */
+        /* Enhanced API Status Bar with Green/Red Indicators */
         .api-status-bar {
             background: var(--prism-black);
             color: var(--pure-white);
@@ -320,42 +325,84 @@
             align-items: center;
             gap: 0.5rem;
             transition: all 0.2s ease;
+            border-radius: 4px;
         }
 
+        /* Green status for working APIs */
         .api-badge.active {
-            background: var(--precise-red);
+            background: rgba(40, 167, 69, 0.15);
+            border-color: var(--status-green);
             color: var(--pure-white);
-            border-color: var(--precise-red);
         }
 
-        .api-badge.active::after {
-            content: '';
-            position: absolute;
-            bottom: -4px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 0;
-            height: 0;
-            border-style: solid;
-            border-width: 4px 4px 0 4px;
-            border-color: var(--precise-red) transparent transparent transparent;
+        .api-badge.active .status-light {
+            background: var(--status-green);
+            box-shadow: 0 0 10px var(--status-green);
+            animation: pulse-green 2s infinite;
         }
 
-        .status-dot {
+        /* Red status for non-working APIs */
+        .api-badge.inactive {
+            background: rgba(220, 53, 69, 0.15);
+            border-color: var(--status-red);
+            color: var(--pure-white);
+            opacity: 0.8;
+        }
+
+        .api-badge.inactive .status-light {
+            background: var(--status-red);
+            box-shadow: 0 0 5px var(--status-red);
+        }
+
+        /* Status light indicator */
+        .status-light {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--medium-gray);
+            transition: all 0.3s ease;
+        }
+
+        @keyframes pulse-green {
+            0%, 100% { 
+                opacity: 1;
+                box-shadow: 0 0 5px var(--status-green);
+            }
+            50% { 
+                opacity: 0.6;
+                box-shadow: 0 0 15px var(--status-green);
+            }
+        }
+
+        /* Status legend */
+        .status-legend {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            margin-left: auto;
+            font-size: 0.75rem;
+            color: var(--light-gray);
+            opacity: 0.8;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .legend-dot {
             width: 8px;
             height: 8px;
             border-radius: 50%;
-            background: var(--medium-gray);
         }
 
-        .api-badge.active .status-dot {
-            background: var(--pure-white);
-            animation: pulse 2s infinite;
+        .legend-dot.green {
+            background: var(--status-green);
         }
 
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+        .legend-dot.red {
+            background: var(--status-red);
         }
 
         /* Status Cards */
@@ -767,6 +814,12 @@
             .api-status-bar {
                 justify-content: center;
             }
+            
+            .status-legend {
+                width: 100%;
+                justify-content: center;
+                margin-top: 1rem;
+            }
         }
     </style>
 </head>
@@ -788,7 +841,7 @@
 
     <!-- Main Container -->
     <div class="container">
-        <!-- API Status Bar -->
+        <!-- Enhanced API Status Bar with Green/Red Indicators -->
         <div class="api-status-bar">
             <span style="font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--pure-white);">
                 System Status:
@@ -797,29 +850,39 @@
                     <span class="tooltip">Real-time status of integrated metadata sources</span>
                 </span>
             </span>
-            <div class="api-badge" id="spotify-status" title="Spotify API">
-                <span class="status-dot"></span>
+            <div class="api-badge inactive" id="spotify-status" title="Spotify API">
+                <span class="status-light"></span>
                 Spotify
             </div>
-            <div class="api-badge" id="youtube-status" title="YouTube Data API">
-                <span class="status-dot"></span>
+            <div class="api-badge inactive" id="youtube-status" title="YouTube Data API">
+                <span class="status-light"></span>
                 YouTube
             </div>
             <div class="api-badge active" id="musicbrainz-status" title="MusicBrainz (No API key required)">
-                <span class="status-dot"></span>
+                <span class="status-light"></span>
                 MusicBrainz
             </div>
-            <div class="api-badge" id="genius-status" title="Genius API">
-                <span class="status-dot"></span>
+            <div class="api-badge inactive" id="genius-status" title="Genius API">
+                <span class="status-light"></span>
                 Genius
             </div>
-            <div class="api-badge" id="lastfm-status" title="Last.fm API">
-                <span class="status-dot"></span>
+            <div class="api-badge inactive" id="lastfm-status" title="Last.fm API">
+                <span class="status-light"></span>
                 Last.fm
             </div>
-            <div class="api-badge" id="discogs-status" title="Discogs API">
-                <span class="status-dot"></span>
+            <div class="api-badge inactive" id="discogs-status" title="Discogs API">
+                <span class="status-light"></span>
                 Discogs
+            </div>
+            <div class="status-legend">
+                <div class="legend-item">
+                    <span class="legend-dot green"></span>
+                    <span>Active</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-dot red"></span>
+                    <span>Inactive</span>
+                </div>
             </div>
         </div>
 
@@ -1051,22 +1114,12 @@
             </div>
             
             <div class="term-item">
-                <div class="term-title">ISWC (International Standard Musical Work Code)</div>
-                <div class="term-description">A unique identifier for musical works (compositions) as opposed to recordings. Links to publishing and composition rights.</div>
+                <div class="term-title">API Status Indicators</div>
+                <div class="term-description">Green lights indicate active and configured APIs. Red lights indicate inactive or unconfigured APIs. MusicBrainz is always active as it requires no API key.</div>
             </div>
             
             <div class="term-item">
-                <div class="term-title">UPC (Universal Product Code)</div>
-                <div class="term-description">A barcode used for tracking trade items, often associated with physical or digital album releases.</div>
-            </div>
-            
-            <div class="term-item">
-                <div class="term-title">Publishing Rights</div>
-                <div class="term-description">Legal rights associated with the composition of a song, including mechanical, performance, and synchronization rights.</div>
-            </div>
-            
-            <div class="term-item">
-                <div class="term-title">API Coverage</div>
+                <div class="term-title">Platform Coverage</div>
                 <div class="term-description">The percentage of tracks that have successfully retrieved metadata from a specific data source (Spotify, YouTube, etc.).</div>
             </div>
             
@@ -1124,7 +1177,7 @@
                 // Update API badges based on actual status
                 const apiStatuses = health.apis || {};
                 
-                // Update all API badges
+                // Update all API badges with green/red status
                 const apiMapping = {
                     'spotify': 'spotify-status',
                     'youtube': 'youtube-status',
@@ -1137,10 +1190,14 @@
                 for (const [apiName, elementId] of Object.entries(apiMapping)) {
                     const badge = document.getElementById(elementId);
                     if (badge) {
+                        // Remove both classes first
+                        badge.classList.remove('active', 'inactive');
+                        
+                        // Add appropriate class based on status
                         if (apiStatuses[apiName] === 'operational' || apiStatuses[apiName] === 'configured') {
                             badge.classList.add('active');
                         } else {
-                            badge.classList.remove('active');
+                            badge.classList.add('inactive');
                         }
                     }
                 }
@@ -1148,11 +1205,18 @@
                 // MusicBrainz is always active (no API key needed)
                 const mbBadge = document.getElementById('musicbrainz-status');
                 if (mbBadge) {
+                    mbBadge.classList.remove('inactive');
                     mbBadge.classList.add('active');
                 }
                 
             } catch (error) {
                 console.error('Failed to check API status:', error);
+                // Set all to inactive on error
+                const badges = document.querySelectorAll('.api-badge');
+                badges.forEach(badge => {
+                    badge.classList.remove('active');
+                    badge.classList.add('inactive');
+                });
             }
         }
         
@@ -1177,38 +1241,6 @@
                 }
             };
             reader.readAsText(file);
-            
-            // Option 2: Upload to server (for larger files)
-            if (file.size > 1048576) { // If file > 1MB, use server processing
-                uploadToServer(file);
-            }
-        }
-        
-        async function uploadToServer(file) {
-            showLoading('Uploading and processing CSV file...');
-            
-            const formData = new FormData();
-            formData.append('file', file);
-            
-            try {
-                const response = await fetch('/api/upload/csv', {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                const data = await response.json();
-                
-                if (response.ok) {
-                    alert(`File uploaded successfully!\n\n${data.isrcs_found} ISRCs found and queued for processing.`);
-                    loadDatabaseStats();
-                } else {
-                    alert(data.detail || 'Upload failed');
-                }
-            } catch (error) {
-                alert('Upload error: ' + error.message);
-            } finally {
-                hideLoading();
-            }
         }
         
         function extractISRCsFromCSV(csvContent) {
@@ -1268,7 +1300,7 @@
                 const data = await response.json();
                 
                 if (response.ok) {
-                    alert(`Analysis complete!\n\nSuccessful: ${data.successful}\nFailed: ${data.failed}\n\nUse export buttons to download results.`);
+                    alert(`Analysis complete!\n\nSuccessful: ${data.success}\nFailed: ${data.failed}\n\nUse export buttons to download results.`);
                     
                     // Store results for export
                     window.bulkAnalysisResults = data.results;
@@ -1374,58 +1406,47 @@
             window.lastAnalyzedISRC = data.isrc;
             window.lastAnalysisData = data;
             
-            // Build comprehensive metadata grid - prioritize credits and remove Mode
+            // Build comprehensive metadata grid - ALL fields from JSON
             let metadataHtml = '';
             const fields = [
                 // Basic Track Info
                 { label: 'Title', value: data.title },
                 { label: 'Artist', value: data.artist },
                 { label: 'Album', value: data.album },
-                { label: 'Album Artist', value: data.album_artist },
-                { label: 'Track Number', value: data.track_number },
-                { label: 'Disc Number', value: data.disc_number },
                 { label: 'Duration', value: data.duration_ms ? `${Math.floor(data.duration_ms/60000)}:${String(Math.floor((data.duration_ms%60000)/1000)).padStart(2,'0')}` : 'N/A' },
                 { label: 'Release Date', value: data.release_date },
-                { label: 'Release Year', value: data.release_year },
                 
-                // Credits (prioritized and expanded)
-                { label: 'Composers', value: data.composers && data.composers.length > 0 ? data.composers.join(', ') : 'N/A' },
-                { label: 'Lyricists', value: data.lyricists && data.lyricists.length > 0 ? data.lyricists.join(', ') : 'N/A' },
-                { label: 'Producers', value: data.producers && data.producers.length > 0 ? data.producers.join(', ') : 'N/A' },
-                { label: 'Writers', value: data.writers && data.writers.length > 0 ? data.writers.join(', ') : 'N/A' },
-                { label: 'Performers', value: data.performers && data.performers.length > 0 ? data.performers.join(', ') : 'N/A' },
-                { label: 'Engineers', value: data.engineers && data.engineers.length > 0 ? data.engineers.join(', ') : 'N/A' },
-                { label: 'Featured Artists', value: data.featured_artists && data.featured_artists.length > 0 ? data.featured_artists.join(', ') : 'N/A' },
-                
-                // Music Features (without Mode)
+                // Audio Features
                 { label: 'Tempo', value: data.tempo ? `${Math.round(data.tempo)} BPM` : 'N/A' },
                 { label: 'Key', value: data.key !== undefined ? data.key : 'N/A' },
+                { label: 'Mode', value: data.mode !== undefined ? data.mode : 'N/A' },
                 { label: 'Time Signature', value: data.time_signature },
                 { label: 'Energy', value: data.energy ? `${Math.round(data.energy * 100)}%` : 'N/A' },
                 { label: 'Danceability', value: data.danceability ? `${Math.round(data.danceability * 100)}%` : 'N/A' },
                 { label: 'Valence', value: data.valence ? `${Math.round(data.valence * 100)}%` : 'N/A' },
+                { label: 'Loudness', value: data.loudness },
+                { label: 'Speechiness', value: data.speechiness ? `${Math.round(data.speechiness * 100)}%` : 'N/A' },
+                { label: 'Acousticness', value: data.acousticness ? `${Math.round(data.acousticness * 100)}%` : 'N/A' },
+                { label: 'Instrumentalness', value: data.instrumentalness ? `${Math.round(data.instrumentalness * 100)}%` : 'N/A' },
+                { label: 'Liveness', value: data.liveness ? `${Math.round(data.liveness * 100)}%` : 'N/A' },
                 
-                // Label & Publishing
-                { label: 'Label', value: data.label },
-                { label: 'Copyright', value: data.copyright },
-                { label: 'Publisher', value: data.publisher },
-                { label: 'ISWC', value: data.iswc },
-                { label: 'UPC', value: data.upc },
+                // Popularity & Stats
+                { label: 'Spotify Popularity', value: data.popularity },
+                { label: 'YouTube Views', value: data.youtube_views ? formatNumber(data.youtube_views) : 'N/A' },
+                { label: 'Last.fm Playcount', value: data.lastfm_playcount ? formatNumber(data.lastfm_playcount) : 'N/A' },
+                { label: 'Last.fm Listeners', value: data.lastfm_listeners ? formatNumber(data.lastfm_listeners) : 'N/A' },
                 
                 // Genre & Tags
                 { label: 'Genres', value: data.genres && data.genres.length > 0 ? data.genres.join(', ') : 'N/A' },
+                { label: 'Styles', value: data.styles && data.styles.length > 0 ? data.styles.join(', ') : 'N/A' },
                 { label: 'Tags', value: data.tags && data.tags.length > 0 ? data.tags.join(', ') : 'N/A' },
-                { label: 'Mood', value: data.mood },
                 
-                // Popularity & Stats
-                { label: 'Spotify Popularity', value: data.spotify_popularity },
-                { label: 'YouTube Views', value: data.youtube_views ? formatNumber(data.youtube_views) : 'N/A' },
-                { label: 'Play Count', value: data.play_count ? formatNumber(data.play_count) : 'N/A' },
+                // Label & Publishing
+                { label: 'Label', value: data.label },
+                { label: 'Catalog Number', value: data.catalog_number },
                 
-                // Additional Info
-                { label: 'Explicit', value: data.explicit !== undefined ? (data.explicit ? 'Yes' : 'No') : 'N/A' },
-                { label: 'Language', value: data.language },
-                { label: 'Markets Available', value: data.available_markets && data.available_markets.length > 0 ? `${data.available_markets.length} countries` : 'N/A' }
+                // Credits (if available)
+                { label: 'Credits Count', value: data.credits && data.credits.length > 0 ? data.credits.length : 'N/A' }
             ];
             
             // Only display fields that have values
@@ -1440,7 +1461,7 @@
                 }
             });
             
-            // Build export actions - only one Export to Excel button
+            // Build export actions
             let exportHtml = '';
             if (data.spotify_url) {
                 exportHtml += `<a href="${data.spotify_url}" target="_blank" class="btn btn-secondary">Open in Spotify</a>`;
@@ -1459,6 +1480,7 @@
             }
             exportHtml += `<button class="btn btn-secondary" onclick="downloadJSON('${data.isrc}')">Download JSON</button>`;
             exportHtml += `<button class="btn btn-secondary" onclick="exportSingleTrack('${data.isrc}', 'excel')">Export to Excel</button>`;
+            exportHtml += `<button class="btn btn-secondary" onclick="exportSingleTrack('${data.isrc}', 'csv')">Export to CSV</button>`;
             
             container.innerHTML = `
                 <div class="section-header">
@@ -1531,7 +1553,7 @@
                     const blob = await response.blob();
                     const extension = format === 'excel' ? 'xlsx' : format;
                     const timestamp = new Date().toISOString().slice(0,10);
-                    downloadFile(blob, `track_metadata_export_${timestamp}.${extension}`);
+                    downloadFile(blob, `prism_metadata_export_${timestamp}.${extension}`);
                 } else {
                     const error = await response.json();
                     alert(error.detail || 'Export failed');
@@ -1560,7 +1582,7 @@
                     })
                     .then(blob => {
                         const extension = format === 'excel' ? 'xlsx' : 'csv';
-                        downloadFile(blob, `track_metadata_${isrc}.${extension}`);
+                        downloadFile(blob, `prism_metadata_${isrc}.${extension}`);
                     })
                     .catch(error => {
                         alert('Export error: ' + error.message);
@@ -1577,7 +1599,7 @@
             // Use the stored analysis data for download
             const data = window.lastAnalysisData || { isrc: isrc, message: 'Full data would be here' };
             const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-            downloadFile(blob, `track_metadata_${isrc}.json`);
+            downloadFile(blob, `prism_metadata_${isrc}.json`);
         }
         
         function downloadSampleCSV() {
@@ -1588,7 +1610,7 @@ DEUM21900123,Sample Track 3,Third Artist,Label C,Needs review
 FRFR21800456,Sample Track 4,Fourth Artist,Label A,
 USCA21602485,Sample Track 5,Fifth Artist,Label D,High value
 
-# This is a sample CSV file for the ISRC Metadata finder
+# This is a sample CSV file for the PRISM Analytics Engine
 # You can include ISRCs in any column
 # The system will automatically detect and extract valid ISRC codes
 # ISRCs should be 12 characters: 2 country code + 3 registrant + 2 year + 5 designation`;
