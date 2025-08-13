@@ -1,6 +1,7 @@
 """
-ISRC Meta Data Finder - API Clients
-Complete implementation with modern Python 3.11 type hints
+PRISM Analytics - API Clients
+Complete implementation with modern Python 3.9+ type hints
+Fixed Discogs OAuth authentication
 """
 
 import base64
@@ -11,7 +12,7 @@ import requests
 import asyncio
 from datetime import datetime, timedelta
 from threading import Lock
-from typing import Any
+from typing import Any  # Still need Any from typing
 from urllib.parse import quote
 
 logger = logging.getLogger(__name__)
@@ -83,13 +84,13 @@ class SpotifyClient:
                 raise Exception(f"Spotify auth failed: {response.status_code}")
             
             token_data = response.json()
-            access_token = token_data["access_token"]  # Store in a local variable
-            self.access_token = access_token           # Assign to the instance
+            access_token = token_data["access_token"]
+            self.access_token = access_token
             expires_in = token_data.get("expires_in", 3600)
             self.token_expires = datetime.now() + timedelta(seconds=expires_in - 60)
 
             logger.info("✅ Spotify token obtained successfully")
-            return access_token # Return the local variable
+            return access_token
             
         except Exception as e:
             logger.error(f"Failed to get Spotify token: {e}")
@@ -554,22 +555,61 @@ class LastFmClient:
 
 
 class DiscogsClient:
-    """Discogs API client for detailed release and label information"""
+    """Discogs API client with OAuth authentication"""
     
-    def __init__(self, user_token: str):
+    def __init__(self, consumer_key: str | None = None, consumer_secret: str | None = None, 
+                 user_token: str | None = None):
+        """
+        Initialize Discogs client with OAuth credentials
+        
+        Args:
+            consumer_key: Your Discogs Consumer Key (from app settings)
+            consumer_secret: Your Discogs Consumer Secret (from app settings)
+            user_token: Optional personal access token for authenticated requests
+        """
+        self.consumer_key = consumer_key
+        self.consumer_secret = consumer_secret
         self.user_token = user_token
         self.base_url = "https://api.discogs.com"
-        self.rate_limiter = RateLimiter(60)
+        self.rate_limiter = RateLimiter(60)  # Discogs allows 60 requests per minute with auth
+        
+        # Set up headers
         self.headers = {
-            "Authorization": f"Discogs token={user_token}",
-            "User-Agent": "PRISM-Analytics/2.0"
+            "User-Agent": "PRISM-Analytics/2.0 +https://precise.digital"
         }
+        
+        # Configure authentication
+        if self.consumer_key and self.consumer_secret:
+            # OAuth parameters for public endpoints
+            self.auth_params = {
+                "key": self.consumer_key,
+                "secret": self.consumer_secret
+            }
+            logger.info("✅ Discogs client initialized with Consumer Key/Secret")
+        elif self.user_token:
+            # Token authentication
+            self.headers["Authorization"] = f"Discogs token={self.user_token}"
+            self.auth_params = {}
+            logger.info("✅ Discogs client initialized with User Token")
+        else:
+            # No authentication - very limited rate limits (25 req/min)
+            self.auth_params = {}
+            self.rate_limiter = RateLimiter(25)  # Lower rate limit without auth
+            logger.warning("⚠️ Discogs client initialized without authentication (limited to 25 req/min)")
     
     def _make_request(self, endpoint: str, params: dict[str, Any] | None = None) -> dict[str, Any] | None:
-        """Make a request to Discogs API"""
+        """Make a request to Discogs API with proper authentication"""
         self.rate_limiter.wait_if_needed()
         
         url = f"{self.base_url}{endpoint}"
+        
+        # Merge authentication params with request params
+        if params is None:
+            params = {}
+        
+        # Add OAuth parameters if available
+        if self.auth_params:
+            params.update(self.auth_params)
         
         try:
             response = requests.get(
@@ -579,18 +619,26 @@ class DiscogsClient:
                 timeout=15
             )
             
+            # Check rate limit headers
             remaining = response.headers.get('X-Discogs-Ratelimit-Remaining')
             if remaining and int(remaining) < 5:
                 logger.warning(f"Discogs rate limit low: {remaining} requests remaining")
-                time.sleep(1)
+                time.sleep(1)  # Add a small delay
             
             if response.status_code == 429:
-                logger.warning("Discogs rate limited, waiting 60 seconds")
-                time.sleep(60)
+                # Rate limited - wait and retry
+                retry_after = int(response.headers.get('Retry-After', 60))
+                logger.warning(f"Discogs rate limited, waiting {retry_after} seconds")
+                time.sleep(retry_after)
                 return self._make_request(endpoint, params)
             
-            if response.status_code == 404:
+            if response.status_code == 401:
+                logger.error(f"Discogs authentication failed. Check your Consumer Key and Secret.")
+                logger.error(f"Response: {response.text}")
                 return None
+            
+            if response.status_code == 404:
+                return None  # Not found is not an error
             
             if response.status_code != 200:
                 logger.error(f"Discogs API error: {response.status_code} - {response.text}")
@@ -598,20 +646,72 @@ class DiscogsClient:
             
             return response.json()
             
-        except Exception as e:
+        except requests.exceptions.Timeout:
+            logger.error("Discogs request timed out")
+            return None
+        except requests.exceptions.RequestException as e:
             logger.error(f"Discogs request failed: {e}")
             return None
+        except Exception as e:
+            logger.error(f"Unexpected error in Discogs request: {e}")
+            return None
+    
+    def search(self, query: str | None = None, type: str | None = None, 
+               title: str | None = None, release_title: str | None = None,
+               artist: str | None = None, label: str | None = None,
+               genre: str | None = None, year: str | None = None,
+               barcode: str | None = None, catno: str | None = None,
+               per_page: int = 10) -> dict[str, Any] | None:
+        """
+        Search the Discogs database
+        
+        Args:
+            query: General search query
+            type: Type of item (release, master, artist, label)
+            title: Title to search for
+            release_title: Release title
+            artist: Artist name
+            label: Label name
+            genre: Genre
+            year: Release year
+            barcode: Barcode/UPC
+            catno: Catalog number
+            per_page: Results per page (max 100)
+        
+        Returns:
+            Search results or None
+        """
+        params = {}
+        
+        # Build search parameters
+        if query:
+            params['q'] = query
+        if type:
+            params['type'] = type
+        if title:
+            params['title'] = title
+        if release_title:
+            params['release_title'] = release_title
+        if artist:
+            params['artist'] = artist
+        if label:
+            params['label'] = label
+        if genre:
+            params['genre'] = genre
+        if year:
+            params['year'] = year
+        if barcode:
+            params['barcode'] = barcode
+        if catno:
+            params['catno'] = catno
+        
+        params['per_page'] = min(per_page, 100)  # Max 100 per page
+        
+        return self._make_request("/database/search", params)
     
     def search_release(self, title: str, artist: str, type: str = "release") -> dict[str, Any] | None:
         """Search for a release on Discogs"""
-        params = {
-            'title': title,
-            'artist': artist,
-            'type': type,
-            'per_page': 10
-        }
-        
-        result = self._make_request("/database/search", params)
+        result = self.search(title=title, artist=artist, type=type, per_page=10)
         
         if result and 'results' in result and result['results']:
             return result['results'][0]
@@ -620,13 +720,7 @@ class DiscogsClient:
     
     def search_by_barcode(self, barcode: str) -> dict[str, Any] | None:
         """Search for a release by barcode/UPC"""
-        params = {
-            'barcode': barcode,
-            'type': 'release',
-            'per_page': 10
-        }
-        
-        result = self._make_request("/database/search", params)
+        result = self.search(barcode=barcode, type='release', per_page=10)
         
         if result and 'results' in result and result['results']:
             return result['results'][0]
@@ -635,16 +729,7 @@ class DiscogsClient:
     
     def search_by_catno(self, catalog_number: str, label: str | None = None) -> dict[str, Any] | None:
         """Search for a release by catalog number"""
-        params = {
-            'catno': catalog_number,
-            'type': 'release',
-            'per_page': 10
-        }
-        
-        if label:
-            params['label'] = label
-        
-        result = self._make_request("/database/search", params)
+        result = self.search(catno=catalog_number, label=label, type='release', per_page=10)
         
         if result and 'results' in result and result['results']:
             return result['results'][0]
@@ -720,12 +805,25 @@ class DiscogsClient:
                     'source_confidence': 0.9
                 })
         
-        # Extract extra artists
+        # Extract extra artists (producers, engineers, etc.)
         if 'extraartists' in release_data:
             for artist in release_data['extraartists']:
+                credit_type = artist.get('role', 'contributor').lower()
+                # Normalize common roles
+                if 'producer' in credit_type:
+                    credit_type = 'producer'
+                elif 'writer' in credit_type or 'composed' in credit_type:
+                    credit_type = 'composer'
+                elif 'engineer' in credit_type or 'mixed' in credit_type:
+                    credit_type = 'engineer'
+                elif 'mastered' in credit_type:
+                    credit_type = 'mastering_engineer'
+                else:
+                    credit_type = credit_type.replace(' ', '_')
+                
                 credits.append({
                     'name': artist.get('name', ''),
-                    'credit_type': artist.get('role', 'contributor').lower().replace(' ', '_'),
+                    'credit_type': credit_type,
                     'role_details': artist.get('role', ''),
                     'source': 'discogs',
                     'source_confidence': 0.85
@@ -744,7 +842,7 @@ class DiscogsClient:
                             'source_confidence': 0.8
                         })
         
-        # Remove duplicates
+        # Remove duplicates based on name and credit type
         seen = set()
         unique_credits: list[dict[str, Any]] = []
         for credit in credits:
@@ -784,6 +882,8 @@ class APIClientManager:
                 logger.info("✅ Spotify client initialized")
             except Exception as e:
                 logger.error(f"Failed to initialize Spotify: {e}")
+        else:
+            logger.warning("⚠️ Spotify not configured - missing CLIENT_ID or CLIENT_SECRET")
         
         # YouTube
         if self.config.get("YOUTUBE_API_KEY"):
@@ -792,6 +892,8 @@ class APIClientManager:
                 logger.info("✅ YouTube client initialized")
             except Exception as e:
                 logger.error(f"Failed to initialize YouTube: {e}")
+        else:
+            logger.warning("⚠️ YouTube not configured - missing API_KEY")
         
         # MusicBrainz (no auth required)
         try:
@@ -807,6 +909,8 @@ class APIClientManager:
                 logger.info("✅ Genius client initialized")
             except Exception as e:
                 logger.error(f"Failed to initialize Genius: {e}")
+        else:
+            logger.warning("⚠️ Genius not configured - missing API_KEY")
         
         # Last.fm
         if self.config.get("LASTFM_API_KEY") and self.config.get("LASTFM_SHARED_SECRET"):
@@ -818,17 +922,41 @@ class APIClientManager:
                 logger.info("✅ Last.fm client initialized")
             except Exception as e:
                 logger.error(f"Failed to initialize Last.fm: {e}")
+        else:
+            logger.warning("⚠️ Last.fm not configured - missing API_KEY or SHARED_SECRET")
         
-        # Discogs - Fixed initialization
-        discogs_token = self.config.get("DISCOGS_USER_TOKEN") or self.config.get("DISCOGS_API_KEY")
-        if discogs_token and isinstance(discogs_token, str):
+        # Discogs - Use OAuth credentials
+        discogs_consumer_key = self.config.get("DISCOGS_CONSUMER_KEY")
+        discogs_consumer_secret = self.config.get("DISCOGS_CONSUMER_SECRET")
+        discogs_user_token = self.config.get("DISCOGS_USER_TOKEN")
+        
+        if discogs_consumer_key and discogs_consumer_secret:
             try:
-                self.discogs = DiscogsClient(discogs_token)
-                logger.info("✅ Discogs client initialized")
+                self.discogs = DiscogsClient(
+                    consumer_key=discogs_consumer_key,
+                    consumer_secret=discogs_consumer_secret,
+                    user_token=discogs_user_token  # Optional
+                )
+                logger.info("✅ Discogs client initialized with OAuth")
+                if discogs_user_token:
+                    logger.info("   + User token also provided for authenticated requests")
+            except Exception as e:
+                logger.error(f"Failed to initialize Discogs: {e}")
+        elif discogs_user_token:
+            # Fallback to token-only authentication
+            try:
+                self.discogs = DiscogsClient(user_token=discogs_user_token)
+                logger.info("✅ Discogs client initialized with User Token only")
             except Exception as e:
                 logger.error(f"Failed to initialize Discogs: {e}")
         else:
-            logger.info("Discogs client not configured (no valid token found)")
+            logger.warning("⚠️ Discogs not configured - add CONSUMER_KEY and CONSUMER_SECRET")
+            # Initialize without auth for very limited access
+            try:
+                self.discogs = DiscogsClient()
+                logger.warning("   Using unauthenticated access (25 req/min limit)")
+            except Exception as e:
+                logger.error(f"Failed to initialize Discogs: {e}")
     
     def validate_clients(self) -> dict[str, str]:
         """Check which clients are available"""

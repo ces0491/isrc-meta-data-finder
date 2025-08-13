@@ -20,6 +20,18 @@ Metadata aggregation tool using ISRC codes.
 - 🚦 **Rate Limiting**: Responsible API usage with automatic throttling
 - 📦 **Bulk Operations**: Process hundreds of ISRCs efficiently
 
+## 📊 Data Sources
+
+| Source | Data Types | Authentication Required |
+|--------|------------|------------------------|
+| **Spotify** | Audio features, popularity, album info | ✅ Client ID & Secret |
+| **MusicBrainz** | Recording details, artist credits | ❌ No auth required |
+| **YouTube** | Video views, channel info | ✅ API Key |
+| **Genius** | Lyrics, songwriter credits | ✅ API Key |
+| **Musixmatch** | Lyrics, translations | ✅ API Key |
+| **Last.fm** | Tags, listening statistics | ✅ API Key |
+| **Discogs** | Label info, release details | ✅ User Token |
+
 ## 🚀 Quick Start
 
 ### Prerequisites
@@ -331,6 +343,49 @@ Full API documentation available at: [http://localhost:5000/api/docs]
 
 ### Common Issues
 
+## 🔧 Authentication Issues
+
+Based on your error logs, here's how to fix each API authentication issue:
+
+### 1. Spotify API (403 Error)
+
+```bash
+# The 403 error indicates invalid or expired credentials
+# Get new credentials from: https://developer.spotify.com/dashboard
+
+# 1. Create a new app in Spotify Dashboard
+# 2. Copy the Client ID and Client Secret
+# 3. Update your .env file:
+SPOTIFY_CLIENT_ID=your_new_client_id
+SPOTIFY_CLIENT_SECRET=your_new_client_secret
+```
+
+### 2. YouTube API (400 Error)
+
+```bash
+# 400 error usually means invalid API key or quota exceeded
+# Get a new API key from: https://console.cloud.google.com/
+
+# 1. Create a new project in Google Cloud Console
+# 2. Enable YouTube Data API v3
+# 3. Create credentials (API Key)
+# 4. Add to .env:
+YOUTUBE_API_KEY=your_youtube_api_key
+```
+
+### 3. Discogs API (401 Error)
+
+```bash
+# You need a personal access token, not just an API key
+# Get from: https://www.discogs.com/settings/developers
+
+# 1. Sign in to Discogs
+# 2. Go to Settings > Developers
+# 3. Click "Generate new token"
+# 4. Add to .env:
+DISCOGS_USER_TOKEN=your_personal_token
+```
+
 #### ModuleNotFoundError
 
 ```bash
@@ -415,15 +470,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## 📝 License
 
-MIT
-
-## 🙏 Acknowledgments
-
-- [Spotify Web API](https://developer.spotify.com/documentation/web-api/)
-- [MusicBrainz](https://musicbrainz.org/) for open music metadata
-- [YouTube Data API](https://developers.google.com/youtube/v3)
-- [Genius API](https://docs.genius.com/) for lyrics and credits
-- [FastAPI](https://fastapi.tiangolo.com/) for the excellent framework
+This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.
 
 ---
 
